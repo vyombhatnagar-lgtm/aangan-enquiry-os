@@ -60,12 +60,12 @@ export const SEED: SeedEnquiry[] = [
 
   // ——— not qualified ———
   { at: "2026-08-28 13:25", p: P("s18", "Hi, I want my flat painted. Just a painting job.", { name: "Mahesh", location: "Kothrud." }, undefined, "Oh, okay. Thanks anyway.") },
-  { at: "2026-08-31 23:10", p: P("s19", "Hello, we're opening a restaurant in Camp and need the interiors done.", {}, undefined, "Alright, thank you.") },
+  { at: "2026-08-31 23:10", p: P("s19", "Hi, this is about my ongoing project with you in Aundh — the site supervisor hasn't come for two days.", {}, undefined, "Okay, please ask someone to call me.") },
   { at: "2026-09-03 17:00", p: P("s20", "Hi, do you design gardens? I want landscape design for my terrace garden.", {}, undefined, "No problem, thanks.") },
   { at: "2026-09-05 11:50", p: P("s21", "Hello, I'm planning interiors for a 2 BHK in Wakad.", { name: "Sunil", area: "850 square feet.", timeline: "Maybe in a year, the building is under construction.", budget: "10 lakh." })},
   { at: "2026-09-08 20:35", p: P("s22", "Hi, I need full interiors for a 1 BHK in Wagholi.", { name: "Priyanka", area: "450 sq ft.", timeline: "Next month.", budget: "3 lakh." }, [{ after: "budget", text: "How much will it cost?" }]) },
   { at: "2026-09-10 14:15", p: P("s23", "Hello, I have a 3 BHK in Nashik and want full interiors.", { name: "Deepak", area: "1,400 square feet.", timeline: "In 2 months.", budget: "12 lakh." }) },
-  { at: "2026-09-13 19:30", p: P("s24", "Hi, I want to buy a sofa — just a sofa for my living room.", {}, undefined, "Okay, thanks.") },
+  { at: "2026-09-13 19:30", p: P("s24", "Hello, we supply laminates and hardware in Pune and wanted to meet your purchase team.", {}, undefined, "Okay, thanks.") },
   { at: "2026-09-17 10:05", p: P("s25", "Hello, we need the full interiors for our 2 BHK in Undri.", { name: "Kavya", area: "1,000 square feet.", timeline: "Next month.", budget: "7 lakh." }) },
   { at: "2026-09-20 22:40", p: P("s26", "Hi, I want waterproofing done for my flat, there's a lot of seepage.", {}, undefined, "Okay. Bye.") },
   { at: "2026-09-26 16:55", p: P("s27", "Hello, I need a small office done in Kharadi.", { name: "Rahul", area: "500 square feet.", timeline: "Next month.", budget: "8 lakh." }) },

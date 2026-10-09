@@ -103,6 +103,15 @@ export function respondStep(state: AgentState, utterance: string, changed: Recor
   let pricingSpoken = false;
   const t = utterance;
 
+  // classification gate, live: existing clients and vendors are routed to the studio, not qualified
+  if (state.turns === 1 && /\b(my (ongoing )?project with you|our project with aangan|site supervisor|already (working|signed) with (you|aangan)|handover|snag|complaint|i (supply|sell|manufacture)|we (supply|manufacture)|supplier|vendor|dealer|looking for (a )?job|resume|internship)\b/i.test(t)) {
+    cs.declined = true;
+    events.push({ type: "NON_ENQUIRY", message: "Existing client or vendor call — routed to the studio team" });
+    parts.push("Thanks for letting me know. This line is for new project enquiries, so I'll pass your message straight to the studio team and someone will call you back during studio hours, 10 to 7.");
+    state.lastAsked = undefined;
+    return finish(state, parts, events, kb, now, false);
+  }
+
   // all requested work is out of scope → polite decline, no qualification theatre
   if (!cs.declined && cs.servicesExcluded.length && !cs.servicesRequested.length && !cs.projectScope) {
     cs.declined = true;

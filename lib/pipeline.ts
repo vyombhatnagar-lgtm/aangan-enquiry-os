@@ -10,6 +10,7 @@ import { inr, isAfterHours, istParts } from "./format";
 import { audit, saveCall, saveLead } from "./db";
 import { getKB } from "./knowledge";
 import { bookingUrl } from "./calendly";
+import { analyzeCall } from "./intel/analysis";
 
 export const DESIGNERS = ["Ira Kulkarni", "Kabir Shah"];
 export const OWNER = "Nikhil";
@@ -106,7 +107,7 @@ export function assignDesigner(l: Lead, seq: number) {
  */
 export async function completeCall(args: {
   state: AgentState; transcript: Turn[]; events: TimedEvent[]; phone: string; startedAt: Date; callId: string; engine: string;
-  isDemo: boolean; cohort?: Cohort; responseTimeSeconds: number; deliverHandoff: boolean; summary?: string; tokens?: { tin: number; tout: number }; q?: Pool | PoolClient; appUrl?: string; seq?: number;
+  isDemo: boolean; cohort?: Cohort; responseTimeSeconds: number; deliverHandoff: boolean; analyseWithAI?: boolean; summary?: string; tokens?: { tin: number; tout: number }; q?: Pool | PoolClient; appUrl?: string; seq?: number;
 }): Promise<{ lead: Lead; call: Call; audits: AuditEvent[] }> {
   const { state, transcript, startedAt } = args;
   const q = state.qualification!;
@@ -132,8 +133,17 @@ export async function completeCall(args: {
   add(endSec, "SOURCES_USED", `Knowledge used: ${kbUsed.length ? kbUsed.join(" · ") : "qualified.md rules only"}`, { sources: kbUsed, kbHash: { services: getKB().services.hash, pricing: getKB().pricing.hash, qualified: getKB().qualified.hash } });
   if (q.confidence < getKB().qualified.data.confidenceThreshold) add(endSec, "LOW_CONFIDENCE", `Low-confidence classification (${q.confidence})`, undefined, "warn");
 
+  // Call Intelligence layer: classification gate + structured analysis + OpportunityEngine score
+  lead.intel = await analyzeCall(lead, transcript, { useLLM: !!args.analyseWithAI });
+  lead.callClass = lead.intel.callClass;
+  add(endSec, "CALL_ANALYSED", `Call intelligence: ${lead.intel.callClass.toLowerCase().replace(/_/g, " ")} · buyer signals ${lead.intel.buyerSignals} · opportunity ${lead.intel.opportunityScore}/100 (${lead.intel.engine})`, { objections: lead.intel.objections.map((o) => o.type) });
+  const nonEnquiry = lead.callClass !== "ENQUIRY";
+  if (nonEnquiry) add(endSec, "CLASSIFICATION_GATE", `Not a project enquiry — routed to the studio team and kept out of the funnel: ${lead.intel.classReason}`, undefined, "info", "Classification gate");
+
   const seq = args.seq ?? Math.floor(Math.random() * 100);
-  if (handoff) {
+  if (nonEnquiry) {
+    lead.designerAssigned = "Studio front desk";
+  } else if (handoff) {
     lead.designerAssigned = assignDesigner(lead, seq);
     lead.bookingUrl = bookingUrl(lead);
     lead.handoffMessage = buildHandoffMessage(lead, args.appUrl);

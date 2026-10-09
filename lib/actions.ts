@@ -94,6 +94,10 @@ export async function applyAction(leadOrId: Lead | string, input: ActionInput, o
       await handoff(l, user, at, opts);
       break;
   }
+  if (l.intel && (input.action === "won" || input.action === "lost")) {
+    l.intel.dealOutcome = input.action === "won" ? "likely_closed" : "likely_lost";
+    l.intel.dealProbability = input.action === "won" ? 1 : 0.02;
+  }
   l.status = deriveStatus(l);
   await saveLead(l, opts.q);
   return l;

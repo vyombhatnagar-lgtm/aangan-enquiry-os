@@ -72,7 +72,7 @@ async function finalize(call: LiveCall, appUrl?: string) {
   const measured = call.usage.tin ? { tin: call.usage.tin + 1800 * call.transcript.length, tout: call.usage.tout } : undefined;
   const res = await completeCall({
     state: st, transcript: call.transcript as Turn[], events: call.events, phone: call.phone, startedAt: new Date(call.startedAt), callId: call.id,
-    engine: sum.engine !== "rules" ? `rules + ${sum.engine}` : call.engine, isDemo: false, responseTimeSeconds: call.answerSec, deliverHandoff: true,
+    engine: sum.engine !== "rules" ? `rules + ${sum.engine}` : call.engine, isDemo: false, responseTimeSeconds: call.answerSec, deliverHandoff: true, analyseWithAI: true,
     summary: sum.engine !== "rules" ? sum.text : undefined, tokens: measured, appUrl,
   });
   return res;

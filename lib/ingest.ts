@@ -54,7 +54,7 @@ export async function ingestTranscript(args: {
   const answerSec = transcript.find((t) => t.speaker === "agent")?.at ?? 0;
   return completeCall({
     state, transcript, events, phone: args.phone, startedAt: at, callId: args.callId ?? newId("CALL", at), engine: args.engine,
-    isDemo: false, responseTimeSeconds: answerSec, deliverHandoff: true, appUrl: args.appUrl, summary: args.summary,
+    isDemo: false, responseTimeSeconds: answerSec, deliverHandoff: true, analyseWithAI: true, appUrl: args.appUrl, summary: args.summary,
   });
 }
 

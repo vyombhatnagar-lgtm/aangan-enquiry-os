@@ -3,7 +3,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 
 const GROUPS: { title: string; items: { href: string; label: string; key?: string }[] }[] = [
-  { title: "Business", items: [{ href: "/", label: "Overview" }, { href: "/analytics", label: "Analytics & ROI" }, { href: "/analytics#experiment", label: "Experiment" }, { href: "/costs", label: "Costs" }] },
+  { title: "Business", items: [{ href: "/", label: "Overview" }, { href: "/analytics", label: "Analytics & ROI" }, { href: "/analytics#experiment", label: "Experiment" }, { href: "/intelligence", label: "Call intelligence" }, { href: "/costs", label: "Costs" }] },
   { title: "Operations", items: [{ href: "/leads", label: "Enquiries", key: "leads" }, { href: "/calls", label: "Calls", key: "calls" }, { href: "/failures", label: "Review & failures", key: "review" }] },
   { title: "System", items: [{ href: "/agent", label: "Voice agent (Vaani)" }, { href: "/knowledge", label: "Knowledge" }, { href: "/system", label: "How it works" }] },
 ];

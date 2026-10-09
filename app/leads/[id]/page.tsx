@@ -7,6 +7,7 @@ import { describeBudget } from "@/lib/pipeline";
 import { Money, Pill } from "@/components/ui";
 import { LeadActions } from "@/components/LeadActions";
 import { CalendlyPanel } from "@/components/CalendlyPanel";
+import { IntelPanel } from "@/components/IntelPanel";
 import { calendlyConfigured, calendlyWebhookConfigured } from "@/lib/calendly";
 
 export const dynamic = "force-dynamic";
@@ -93,6 +94,8 @@ export default async function LeadPage({ params }: { params: Promise<{ id: strin
               </div>
             )}
           </section>
+
+          <IntelPanel lead={lead} />
 
           <section className="card card-pad">
             <div className="panel-title"><h3>Conversation</h3><span className="tiny muted mono">{call ? `${call.id} · ${duration(call.durationSec)} · ${call.status.toLowerCase()}` : "no call record"}</span></div>

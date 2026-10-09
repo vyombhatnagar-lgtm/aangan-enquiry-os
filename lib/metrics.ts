@@ -72,7 +72,8 @@ export function sampleSize(p1: number, p2: number) {
 }
 
 export function computeMetrics(leads: Lead[], calls: Call[], events: AuditEvent[], baseline: Baseline | null, overrides: Override[], now = new Date()): Metrics {
-  const L = leads.filter((l) => l.cohort === "AUTOMATION");
+  // classification gate: existing-client and vendor calls are answered and logged but are not enquiries
+  const L = leads.filter((l) => l.cohort === "AUTOMATION" && (l.callClass ?? "ENQUIRY") === "ENQUIRY");
   const N = L.length;
   const failedLeads = L.filter((l) => l.status === "NEW" && l.aiDecision == null);
   const answered = calls.filter((c) => c.status === "ANSWERED").length;

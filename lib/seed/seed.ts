@@ -4,6 +4,7 @@ import { runScripted } from "../engine/simulate";
 import { completeCall, newId } from "../pipeline";
 import { applyAction } from "../actions";
 import { applyCalendlyEvent, fakeInviteeCreated } from "../calendly";
+import { analyzeCall } from "../intel/analysis";
 import { audit, saveBaseline, saveCall, saveLead } from "../db";
 import { callCost } from "../costs";
 import { isAfterHours, istParts } from "../format";
@@ -80,6 +81,7 @@ export async function seedDemo(c: PoolClient) {
     }
     if (o?.won) l = await applyAction(l, { action: "won", user: "Nikhil (demo seed)", value: o.won, at: plus(end, 14 * 24 * 60) }, { q: c });
     if (o?.lost) l = await applyAction(l, { action: "lost", user: "Nikhil (demo seed)", reason: o.lost, at: plus(end, 12 * 24 * 60) }, { q: c });
+    if (o || s.override) { l.intel = await analyzeCall(l, r.transcript, { useLLM: false }); l.callClass = l.intel.callClass; await saveLead(l, c); }
   }
   await saveBaseline(DEMO_BASELINE, c);
 }

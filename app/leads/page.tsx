@@ -55,7 +55,7 @@ export default async function LeadsPage({ searchParams }: { searchParams: Promis
             {leads.map((l) => (
               <tr key={l.id}>
                 <td className="mono" style={{ whiteSpace: "nowrap" }}>{fmtDate(l.enquiryAt)}{l.afterHours && <div><span className="badge ah">after hours</span></div>}</td>
-                <td><Link className="rowlink" href={`/leads/${l.id}`}>{l.customerName ?? "Unknown caller"}</Link>{l.highValue && <> <span className="badge hv">HV</span></>}<div className="tiny muted mono">{l.phoneNumber}</div></td>
+                <td><Link className="rowlink" href={`/leads/${l.id}`}>{l.customerName ?? "Unknown caller"}</Link>{l.highValue && <> <span className="badge hv">HV</span></>}{l.callClass && l.callClass !== "ENQUIRY" && <> <span className="badge">{l.callClass === "EXISTING_CLIENT" ? "existing client" : "not an enquiry"}</span></>}<div className="tiny muted mono">{l.phoneNumber}</div></td>
                 <td className="small">{l.projectType ?? "—"}{l.location && <div className="tiny muted">{l.location}</div>}</td>
                 <td className="r small">{l.approximateArea ? l.approximateArea.toLocaleString("en-IN") : "—"}</td>
                 <td className="small">{l.budget ?? "—"}</td>

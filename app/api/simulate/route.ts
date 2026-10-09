@@ -26,7 +26,7 @@ export async function POST(req: Request) {
     const res = await completeCall({
       state: r.state, transcript: r.transcript, events: r.events, phone: persona.phone, startedAt: at, callId: newId("CALL", at),
       engine: sum.engine === "rules" ? "rules (simulated caller)" : `rules + ${sum.engine}`, isDemo: true, responseTimeSeconds: r.answerSec,
-      deliverHandoff: true, summary: sum.engine === "rules" ? undefined : sum.text, appUrl: appUrl(req),
+      deliverHandoff: true, analyseWithAI: true, summary: sum.engine === "rules" ? undefined : sum.text, appUrl: appUrl(req),
     });
     return NextResponse.json({ scenario: { key: scenario, ...sc, persona: undefined }, lead: res.lead, call: res.call, audits: res.audits, qualification: r.state.qualification });
   } catch (e) {

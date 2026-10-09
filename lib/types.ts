@@ -1,3 +1,5 @@
+import type { CallAnalysis, CallClass } from "./intel/types";
+
 export type LeadStatus =
   | "NEW"
   | "IN_PROGRESS"
@@ -73,6 +75,8 @@ export interface Lead {
   outcomeRecordedBy?: string | null;
   outcomeAt?: string | null;
 
+  intel?: CallAnalysis | null;
+  callClass?: CallClass;
   responseTimeSeconds?: number | null;
   aiCost: number;
   afterHours: boolean;
