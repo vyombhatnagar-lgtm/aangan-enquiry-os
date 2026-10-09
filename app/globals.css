@@ -11,8 +11,8 @@
   --paper-2: #f6f1e7;
   --ink: #1d1a15;
   --ink-2: #4a4239;
-  --muted: #877c6d;
-  --faint: #b3a893;
+  --muted: #6c6253;
+  --faint: #9a8f7c;
   --rule: #d9cfbd;
   --rule-2: #e6ddcc;
   --terra: #b4532a;
@@ -498,11 +498,11 @@ details.collapse summary::-webkit-details-marker { display: none; }
 @keyframes wave { 50% { transform: translateX(-20px); } }
 
 /* ticker */
-.ticker { overflow: hidden; border-bottom: 1px solid var(--rule); background: var(--ink); color: var(--plaster); mask-image: linear-gradient(90deg, transparent, #000 6%, #000 94%, transparent); }
+.ticker { overflow: hidden; border-bottom: 1px solid var(--rule); background: #1d1a15; color: #f1e9dc; mask-image: linear-gradient(90deg, transparent, #000 6%, #000 94%, transparent); }
 .ticker-track { display: flex; width: max-content; animation: marquee 70s linear infinite; }
 .ticker:hover .ticker-track { animation-play-state: paused; }
 @keyframes marquee { to { transform: translateX(-50%); } }
-.tk { display: inline-flex; gap: 10px; align-items: baseline; padding: 8px 22px; text-decoration: none; font-size: 12.5px; border-right: 1px solid rgba(255, 255, 255, .08); white-space: nowrap; }
+.tk { color: #f1e9dc; display: inline-flex; gap: 10px; align-items: baseline; padding: 8px 22px; text-decoration: none; font-size: 12.5px; border-right: 1px solid rgba(255, 255, 255, .08); white-space: nowrap; }
 .tk-t { font: 11px var(--mono); opacity: .55; }
 .tk-n { font-family: var(--serif); font-size: 15px; }
 .tk-p { opacity: .7; }
@@ -526,3 +526,18 @@ details.collapse summary::-webkit-details-marker { display: none; }
   .hero-ledger { border-left: 0; border-top: 1px solid rgba(217, 168, 91, .22); padding: 28px 22px; }
   .hl-grid span { font-size: 22px; }
 }
+
+/* ═════════ critique fixes ═════════ */
+@media (prefers-color-scheme: dark) {
+  .nc { box-shadow: 0 0 0 1px rgba(217, 168, 91, .28), 0 30px 90px -30px rgba(240, 138, 90, .35); }
+  .stepwell-card { box-shadow: 0 0 0 1px rgba(63, 143, 138, .25); }
+}
+/* table figures: tabular sans, not light display serif */
+.tbl td.r.num, .tbl td .num, .tbl td.r { font-family: var(--sans); font-variant-numeric: tabular-nums lining-nums; font-size: 14px; letter-spacing: 0; }
+.tbl td.r .tiny { display: block; }
+/* touch targets */
+.btn { min-height: 38px; }
+.btn.sm { min-height: 34px; padding: 6px 12px; }
+input, select { min-height: 38px; }
+/* focus visibility */
+a:focus-visible, button:focus-visible, .btn:focus-visible { outline: 2px solid var(--terra); outline-offset: 2px; }
