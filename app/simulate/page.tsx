@@ -10,9 +10,8 @@ export default function SimulatePage() {
     <div className="page" style={{ maxWidth: 1480 }}>
       <div className="page-head">
         <div>
-          <div className="eyebrow">Demo mode · live line</div>
-          <h1>Simulate an incoming call</h1>
-          <p>Each call creates a real enquiry: conversation, extraction, qualification against qualified.md, indicative pricing from pricing.md, a designer handoff or review task, and its cost. The dashboard updates as soon as it ends.</p>
+          <h1>Test call</h1>
+          <p className="small muted">Run a sample call or play the caller yourself. Test calls are saved as enquiries marked demo.</p>
         </div>
       </div>
       <Simulator scenarios={scenarios} threshold={getKB().qualified.data.confidenceThreshold} />

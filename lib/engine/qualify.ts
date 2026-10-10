@@ -96,7 +96,7 @@ export function qualify(state: CallState): Qualification {
         if (scope === "kitchen_wardrobe") { rules.push({ ...base, result: "SKIP", detail: "Standalone kitchen — covered by R3" }); break; }
         if (!scope) { rules.push({ ...base, result: "UNKNOWN", detail: "Scope unknown" }); break; }
         const rows = pricing.perSqft.filter((r) => r.scope === scope);
-        if (!rows.length) { rules.push({ ...base, result: "UNKNOWN", detail: `No pricing row for ${scope} in pricing.md` }); break; }
+        if (!rows.length) { rules.push({ ...base, result: "UNKNOWN", detail: `No price listed for ${scope}` }); break; }
         const low = Math.min(...rows.map((r) => r.min));
         if (budgetTop == null) { rules.push({ ...base, result: "UNKNOWN", detail: "Budget not given" }); break; }
         const abs = rule.fullHomeAbsoluteMin as number;
@@ -153,12 +153,12 @@ export function qualify(state: CallState): Qualification {
     reviewReasons.unshift(`AI confidence ${conf.toFixed(2)} is below the ${threshold} threshold (${[state.corrections.length && `${state.corrections.length} correction(s)`, state.hedged.length && `vague: ${state.hedged.join(", ")}`].filter(Boolean).join("; ")})`);
     decision = "NEEDS_HUMAN_REVIEW";
     for (const u of unknown) reviewReasons.push(`${u.id} ${u.name}: ${u.detail}`);
-    if (fails.length) reviewReasons.push(...fails.map((f) => `${f.id} ${f.name} would fail: ${f.detail}`));
+    if (fails.length) reviewReasons.push(...fails.map((f) => `${f.name} would fail: ${f.detail}`));
   }
 
   const reason =
-    decision === "QUALIFIED" ? `Meets all ${rules.filter((r) => r.result === "PASS").length} criteria in qualified.md${highValue ? " · high-value" : ""}` :
-    decision === "NOT_QUALIFIED" ? fails.map((f) => `${f.id} ${f.name}: ${f.detail}`).join(" · ") :
+    decision === "QUALIFIED" ? `Meets all ${rules.filter((r) => r.result === "PASS").length} studio criteria${highValue ? " · high-value" : ""}` :
+    decision === "NOT_QUALIFIED" ? fails.map((f) => `${f.name}: ${f.detail}`).join(" · ") :
     reviewReasons[0] ?? "Needs a human decision";
 
   return { decision, reason, confidence: Number(conf.toFixed(2)), rules, missing, reviewReasons: dedupe(reviewReasons), recommendedAction: nextAction(decision, state, missing, highValue, declineKind), highValue, declineKind };

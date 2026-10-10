@@ -134,20 +134,20 @@ export function computeMetrics(leads: Lead[], calls: Call[], events: AuditEvent[
   }
   const minN = bConv != null && conversion > 0 ? sampleSize(bConv, conversion) : null;
   let status: Metrics["roi"]["status"]; let statusText: string;
-  if (!baseline) { status = "NO_BASELINE"; statusText = "ROI cannot yet be causally established — no baseline has been entered."; }
-  else if (baseline.source === "DEMO_ASSUMPTION") { status = "DEMO_BASELINE"; statusText = "ROI cannot yet be causally established — the baseline is a demo assumption, not Aangan's real numbers."; }
-  else if (won.length < 5 || matured.length < 30) { status = "TOO_SMALL"; statusText = `ROI cannot yet be causally established — only ${won.length} won project(s) and ${matured.length} matured enquiries so far.`; }
-  else if (baseline.design !== "RANDOMISED") { status = "OBSERVATIONAL"; statusText = "ROI cannot yet be causally established — before/after comparison only. Seasonality, marketing and pricing changes are not controlled for."; }
-  else if (pValue != null && pValue < 0.05) { status = "CAUSAL"; statusText = `Randomised comparison, p = ${pValue.toFixed(3)}. The lift is unlikely to be chance.`; }
-  else { status = "TOO_SMALL"; statusText = `Randomised, but not yet significant (p = ${pValue?.toFixed(2) ?? "—"}). Keep running.`; }
+  if (!baseline) { status = "NO_BASELINE"; statusText = "Not proven — no \"before\" numbers have been entered."; }
+  else if (baseline.source === "DEMO_ASSUMPTION") { status = "DEMO_BASELINE"; statusText = "Not proven — the \"before\" numbers are sample figures, not Aangan's real ones."; }
+  else if (won.length < 5 || matured.length < 30) { status = "TOO_SMALL"; statusText = `Not proven — only ${won.length} won project(s) and ${matured.length} enquiries old enough to judge.`; }
+  else if (baseline.design !== "RANDOMISED") { status = "OBSERVATIONAL"; statusText = "Not proven — this is a before/after comparison, so season, marketing and price changes could explain it."; }
+  else if (pValue != null && pValue < 0.05) { status = "CAUSAL"; statusText = `Side-by-side comparison; the improvement is very unlikely to be luck.`; }
+  else { status = "TOO_SMALL"; statusText = `Side-by-side comparison running, not enough data yet. Keep going.`; }
 
   // verdict — the one question on the dashboard
   let verdict: Metrics["verdict"];
   if (!won.length && !lost.length) verdict = { headline: "Too early to tell", tone: "unknown", detail: "No project outcomes recorded yet. Revenue appears weeks after the call — keep recording outcomes." };
-  else if (bConv == null) verdict = { headline: "Can't tell yet", tone: "unknown", detail: "There is no baseline to compare against. Enter last quarter's manual numbers on the Analytics page." };
-  else if (conversion <= bConv) verdict = { headline: "Not yet", tone: "no", detail: `Enquiry → project conversion is ${(conversion * 100).toFixed(1)}%, not above the ${(bConv * 100).toFixed(1)}% baseline.` };
-  else if (status === "CAUSAL") verdict = { headline: "Yes", tone: "yes", detail: `Conversion is up ${((conversion - bConv) * 100).toFixed(1)} pp in a randomised comparison.` };
-  else verdict = { headline: "Probably — not proven", tone: "maybe", detail: `Conversion is ${(conversion * 100).toFixed(1)}% vs ${(bConv * 100).toFixed(1)}% baseline, but ${status === "DEMO_BASELINE" ? "the baseline is a demo assumption" : status === "TOO_SMALL" ? "the sample is too small" : "this is a before/after comparison"}.` };
+  else if (bConv == null) verdict = { headline: "Can't tell yet", tone: "unknown", detail: "Nothing to compare against yet. Enter last quarter's numbers on the Performance page." };
+  else if (conversion <= bConv) verdict = { headline: "Not yet", tone: "no", detail: `Enquiry → project conversion is ${(conversion * 100).toFixed(1)}%, not above the ${(bConv * 100).toFixed(1)}% from before.` };
+  else if (status === "CAUSAL") verdict = { headline: "Yes", tone: "yes", detail: `Conversion is up ${((conversion - bConv) * 100).toFixed(1)} pp in a side-by-side comparison.` };
+  else verdict = { headline: "Probably — not proven", tone: "maybe", detail: `Conversion is ${(conversion * 100).toFixed(1)}% vs ${(bConv * 100).toFixed(1)}% before, but ${status === "DEMO_BASELINE" ? "the \"before\" figure is a sample" : status === "TOO_SMALL" ? "the sample is too small" : "this is a before/after comparison"}.` };
 
   // weekly series (Mon-start, IST-ish)
   const weekKey = (iso: string) => { const d = new Date(new Date(iso).getTime() + 5.5 * 3600_000); const day = (d.getUTCDay() + 6) % 7; d.setUTCDate(d.getUTCDate() - day); return d.toISOString().slice(0, 10); };
@@ -197,29 +197,29 @@ export function computeFailures(L: Lead[], events: AuditEvent[], overrides: Over
   const missedHandoffs = L.filter((l) => l.decision === "QUALIFIED" && (l.designerHandoffStatus === "NOT_SENT" || (l.designerHandoffStatus === "SENT" && !l.designerContactedAt && now.getTime() - new Date(l.handoffSentAt ?? l.enquiryAt).getTime() > (l.afterHours ? 16 : 2) * 3600_000)));
   const unanswered = failedLeads.filter((l) => !l.designerContactedAt);
   const counts: Record<string, number> = {
-    "AI qualification errors": count(["QUALIFICATION_ERROR"]),
+    "Wrong decisions": count(["QUALIFICATION_ERROR"]),
     "Human overrides": overrides.length,
     "Customer corrections": count(["CUSTOMER_CORRECTION"]),
     "Pricing escalations": count(["PRICING_ESCALATION"]),
-    "Pricing guardrail breaches (voice agent)": count(["PRICING_GUARDRAIL_BREACH"]),
+    "Unapproved prices quoted": count(["PRICING_GUARDRAIL_BREACH"]),
     "Failed calls": count(["CALL_FAILED", "CALL_ABANDONED"]),
     "Missed handoffs": missedHandoffs.length,
-    "Integration failures": count(["INTEGRATION_FAILURE", "HANDOFF_FAILED"]),
+    "Notification failures": count(["INTEGRATION_FAILURE", "HANDOFF_FAILED"]),
     "Unanswered calls (no call-back)": unanswered.length,
-    "Low-confidence classifications": count(["LOW_CONFIDENCE"]),
-    "Calendly cancellations": count(["CONSULTATION_CANCELED"]),
-    "Unmatched Calendly bookings": count(["CALENDLY_UNMATCHED"]),
+    "Low-confidence decisions": count(["LOW_CONFIDENCE"]),
+    "Consultations cancelled": count(["CONSULTATION_CANCELED"]),
+    "Unmatched online bookings": count(["CALENDLY_UNMATCHED"]),
   };
   const decided = L.filter((l) => l.aiDecision && l.aiDecision !== "NEEDS_HUMAN_REVIEW").length;
-  const failureRate = L.length ? (counts["Failed calls"] + counts["Integration failures"]) / L.length : 0;
-  const disagreementRate = decided ? counts["AI qualification errors"] / decided : null;
+  const failureRate = L.length ? (counts["Failed calls"] + counts["Notification failures"]) / L.length : 0;
+  const disagreementRate = decided ? counts["Wrong decisions"] / decided : null;
   const warnings: FailureMetrics["warnings"] = [];
   if (failureRate > 0.05) warnings.push({ level: "error", text: `Failure rate ${(failureRate * 100).toFixed(1)}% is above the 5% threshold` });
-  if (counts["Integration failures"]) warnings.push({ level: "error", text: `${counts["Integration failures"]} handoff/integration failure(s) — check Telegram` });
-  if (counts["Pricing guardrail breaches (voice agent)"]) warnings.push({ level: "error", text: `The voice agent quoted ${counts["Pricing guardrail breaches (voice agent)"]} figure(s) not in pricing.md or without the caveat — fix the Vaani prompt` });
+  if (counts["Notification failures"]) warnings.push({ level: "error", text: `${counts["Notification failures"]} designer notification(s) failed to send` });
+  if (counts["Unapproved prices quoted"]) warnings.push({ level: "error", text: `The voice agent quoted ${counts["Unapproved prices quoted"]} price(s) not on the approved list — check those calls` });
   if (missedHandoffs.length) warnings.push({ level: "warn", text: `${missedHandoffs.length} qualified lead(s) not contacted within SLA (2 working hours)` });
-  if (disagreementRate != null && disagreementRate > 0.1) warnings.push({ level: "warn", text: `Humans disagreed with ${(disagreementRate * 100).toFixed(0)}% of AI decisions — review qualified.md` });
-  if (counts["Unmatched Calendly bookings"]) warnings.push({ level: "warn", text: `${counts["Unmatched Calendly bookings"]} Calendly booking(s) couldn't be matched to an enquiry — check the event feed` });
+  if (disagreementRate != null && disagreementRate > 0.1) warnings.push({ level: "warn", text: `Humans disagreed with ${(disagreementRate * 100).toFixed(0)}% of automatic decisions — the qualifying criteria may need updating` });
+  if (counts["Unmatched online bookings"]) warnings.push({ level: "warn", text: `${counts["Unmatched online bookings"]} online booking(s) couldn't be matched to an enquiry` });
   if (unanswered.length) warnings.push({ level: "warn", text: `${unanswered.length} failed call(s) never called back` });
   // conversion trend: last 3 weeks of matured leads vs the 3 before
   const age = (l: Lead) => (now.getTime() - new Date(l.enquiryAt).getTime()) / DAY;

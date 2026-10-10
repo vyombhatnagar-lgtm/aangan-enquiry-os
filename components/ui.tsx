@@ -3,7 +3,7 @@ import type { ReactNode } from "react";
 
 export function Pill({ s, label }: { s?: string | null; label?: string }) {
   if (!s) return <span className="pill p-NEW">—</span>;
-  return <span className={`pill p-${s}`}>{label ?? s.replace(/_/g, " ").toLowerCase()}</span>;
+  return <span className={`pill p-${s}`}>{label ?? (s === "NEEDS_HUMAN_REVIEW" ? "needs review" : s.replace(/_/g, " ").toLowerCase())}</span>;
 }
 
 export function Money({ v, short }: { v: number | null | undefined; short?: boolean }) {

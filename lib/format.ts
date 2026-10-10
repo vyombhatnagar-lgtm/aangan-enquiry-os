@@ -98,3 +98,27 @@ export function duration(sec?: number | null) {
 export function titleCase(s: string) {
   return s.replace(/\b([a-z])/g, (m) => m.toUpperCase());
 }
+
+/** Event types that describe internals rather than what happened to the customer. */
+export const HIDDEN_EVENTS = new Set(["SOURCES_USED", "CALL_ANALYSED", "AI_EXTRACTION", "EXTRACTED"]);
+
+/** Strip vendor, file and model names from text shown to studio staff. */
+export function plain(s: string | null | undefined): string {
+  if (!s) return "";
+  return s
+    .replace(/\b(qualified|pricing|services)\.md\b/g, (_, k) => ({ qualified: "studio criteria", pricing: "the price list", services: "the services list" } as Record<string, string>)[k])
+    .replace(/\bAI Gateway\b/g, "the assistant")
+    .replace(/\b(anthropic|google)\/[\w.-]+/g, "")
+    .replace(/\b(Claude|Gemini|Haiku|Sonnet)[\w .-]*?(?=[·,)\]]|$)/g, "")
+    .replace(/\(heuristic[^)]*\)/gi, "")
+    .replace(/\bheuristic\b/gi, "standard")
+    .replace(/\bVaani\b/g, "phone line")
+    .replace(/\bR\d:?\s+(?=[A-Z])/g, "")
+    .replace(/criteria in studio criteria/g, "studio criteria")
+    .replace(/\bAI result:\s*/g, "Result: ")
+    .replace(/\bAI answered\b/g, "Answered")
+    .replace(/\s*\(confidence [\d.]+\)/g, "")
+    .replace(/\bNEEDS_HUMAN_REVIEW\b/g, "Needs review").replace(/\bNOT_QUALIFIED\b/g, "Not qualified").replace(/\bQUALIFIED\b/g, "Qualified")
+    .replace(/\s{2,}/g, " ")
+    .trim();
+}

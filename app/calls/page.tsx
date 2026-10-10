@@ -12,9 +12,8 @@ export default async function CallsPage() {
     <div className="page">
       <div className="page-head">
         <div>
-          <div className="eyebrow">Operations</div>
           <h1>Calls</h1>
-          <p>Every call and its full transcript, kept in Postgres. Nothing exists only in Telegram or in the telephony provider.</p>
+          <div className="small muted">Every call with its transcript.</div>
         </div>
       </div>
       <div className="stack">
@@ -29,16 +28,16 @@ export default async function CallsPage() {
                   <div className="tiny muted" style={{ marginTop: 2, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{c.transcript.find((t) => t.speaker === "caller")?.text ?? c.failureReason ?? ""}</div>
                 </span>
                 <Pill s={c.status} />
-                <span>{l?.aiDecision ? <Pill s={l.aiDecision} /> : <span className="tiny muted">—</span>}</span>
+                <span>{l?.decision ? <Pill s={l.decision} /> : <span className="tiny muted">—</span>}</span>
                 <span className="r mono small" style={{ textAlign: "right" }}>{duration(c.durationSec)}<div className="tiny muted">{inr(c.cost.total, { dp: 2 })}</div></span>
               </summary>
               <div style={{ padding: "0 24px 22px" }}>
-                <div className="row between" style={{ marginBottom: 12 }}><span className="tiny muted mono">{c.id} · engine {c.engine} · {c.transcript.length} turns</span>{l && <Link href={`/leads/${l.id}`} className="btn sm">Open lead →</Link>}</div>
+                <div className="row between" style={{ marginBottom: 12 }}><span className="tiny muted mono">{c.transcript.length} turns</span>{l && <Link href={`/leads/${l.id}`} className="btn sm">Open lead →</Link>}</div>
                 <div className="transcript">
                   {c.transcript.map((t, i) => (
                     <div key={i} className={`turn ${t.speaker}`}>
-                      <div className="who">{t.speaker === "agent" ? "AI" : t.speaker === "caller" ? "Caller" : "Sys"}<small>{Math.floor(t.at / 60)}:{String(Math.floor(t.at % 60)).padStart(2, "0")}</small></div>
-                      <div><div className="bubble">{t.text}</div>{t.meta?.kb?.length ? <div className="kbref">{t.meta.kb.map((k) => <span key={k}>↳ {k}</span>)}</div> : null}</div>
+                      <div className="who">{t.speaker === "agent" ? "Aangan" : t.speaker === "caller" ? "Caller" : "Note"}<small>{Math.floor(t.at / 60)}:{String(Math.floor(t.at % 60)).padStart(2, "0")}</small></div>
+                      <div><div className="bubble">{t.text}</div></div>
                     </div>
                   ))}
                 </div>

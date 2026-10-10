@@ -21,16 +21,16 @@ The system is judged by **enquiry → project conversion and revenue**, not by h
 
 | Route | What |
 |---|---|
-| `/` | Executive view: the verdict, revenue ledger, conversion, funnel, leading vs lagging, health, cost |
-| `/simulate` | **Simulate incoming call**: six scripted scenarios, or *be the caller* by voice or typing |
-| `/leads`, `/leads/:id` | Enquiries with filters; full lead record with outcome actions, override, Telegram copy, transcript, audit |
+| `/` | Overview: the verdict, revenue, conversion, pipeline, response and outcomes |
+| `/leads`, `/leads/:id` | Enquiries; full record with outcome actions, decision change, transcript, activity |
+| `/failures` | Needs attention: review queue, missed handoffs, warnings |
+| `/intelligence` | Insights: who to call first, objections, follow-ups |
 | `/calls` | Every call and its transcript |
-| `/analytics` | Funnel, conversion, revenue, baseline vs current, ROI (gross vs incremental), experiment, baseline editor |
-| `/costs` | Cost breakdown, rate card, per-call costs |
-| `/agent` | Vaani voice-agent setup: greeting, prompt, data points, webhook |
-| `/knowledge` | The three knowledge sources and what the engine evaluates |
-| `/failures` | Warnings, failure counts, human-review queue, missed handoffs, event feed |
-| `/system` | Journey before/after, architecture, components map, guardrails, demo reset |
+| `/analytics` | Performance: before vs now, ROI, baseline editor, remove demo data |
+| `/costs` | Cost breakdown and per-call costs |
+| `/simulate` | Test call: sample callers, or play the caller yourself (saved as demo) |
+
+The agent prompt, rules and architecture are deliberately not shown in the web UI. Use `npm run vaani:setup` to print the Vaani configuration.
 
 ## Architecture
 
@@ -87,13 +87,13 @@ Each knowledge file holds the human-readable rules **and** a machine-readable JS
      -d '{"url":"https://<app>/api/calendly/webhook","events":["invitee.created","invitee.canceled","invitee_no_show.created","invitee_no_show.deleted"],"organization":"<org uri>","scope":"organization","signing_key":"<random secret>"}'
    ```
    Then set the same secret as `CALENDLY_WEBHOOK_SIGNING_KEY`. Bookings move the lead to *Consultation*; cancellations and no-shows move it back and show up on `/failures`. A booking that can't be matched to a lead (no utm, unknown phone) raises a warning instead of being dropped.
-6. Optional: `TELEPHONY_WEBHOOK_SECRET` (checked on `/api/calls/inbound`) and `ALLOW_RESET=0` to disable demo reset.
+6. `TELEPHONY_WEBHOOK_SECRET` is required in production for `/api/calls/inbound` (requests are refused without it).
 
 Local development: `cp .env.example .env.local`, set `DATABASE_URL`, run `npm i && npm run dev`. Run `npm run test:engine` to put the three core scenarios through the engine.
 
 ## Vaani AI (the live phone line)
 
-Vaani holds the call; this app decides. Open `/agent` for everything to paste into Vaani, all generated from `knowledge/*.md`: the greeting, the agent instructions, the data-collection points and the webhook URL.
+Vaani holds the call; this app decides. Run `DATABASE_URL=<neon url> APP_URL=https://<app> npm run vaani:setup` to print everything to paste into Vaani, generated from `knowledge/*.md`: the greeting, the agent instructions, the data-collection points and the webhook URL.
 
 1. Set `VAANI_WEBHOOK_SECRET` (any long random string) in Vercel.
 2. In Vaani: **Settings → Webhooks** → `https://<app>/api/vaani/webhook/<VAANI_WEBHOOK_SECRET>`. Vaani doesn't document request signing, so the secret sits in the URL.
@@ -107,6 +107,19 @@ This prototype has no Indian phone number of its own. To take real calls, a prov
 - stream each caller turn to `/api/calls/live` (`start` → `turn` → `end`) and speak the returned replies.
 
 Pune callers will mix Hindi, Marathi and English. Choose STT/TTS that handles code-switching before going live.
+
+## Go-live checklist
+
+1. **`DASHBOARD_PASSWORD`** — set it. Without it anyone with the URL sees customer names and phone numbers. Browser asks for a password (any username). Webhooks stay reachable.
+2. **Phone number** — buy/attach a +91 number in Vaani and point the webhook at the URL from `npm run vaani:setup`. Until then no real calls arrive.
+3. **AI Gateway** — add a card in Vercel → AI Gateway. Without it, extraction, summaries and call notes fall back to rules (works, less accurate).
+4. **Telegram** — `TELEGRAM_BOT_TOKEN`, `TELEGRAM_CHAT_ID`, `TELEGRAM_WEBHOOK_SECRET`, then `setWebhook` (step 4 above).
+5. **Calendly** — `CALENDLY_EVENT_URL`; for auto-sync, `CALENDLY_WEBHOOK_SIGNING_KEY` + webhook subscription (paid plan).
+6. **Real "before" numbers** — enter last quarter on Performance → Your numbers from before.
+7. **Remove demo data** — Performance → *Remove demo data*. Real enquiries are never deleted by this or by reset; once real enquiries exist, all numbers are computed from real data only.
+8. **`ALLOW_RESET=0`** — after going live, disables the reset endpoint entirely.
+9. **Repo visibility** — the repo contains the agent prompt and pricing. Make it private.
+10. **Rate card** — replace the sample rates in `lib/costs.ts` with invoiced figures.
 
 ## Honest limits
 

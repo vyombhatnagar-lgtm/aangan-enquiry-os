@@ -120,7 +120,7 @@ export async function completeCall(args: {
 
   const at = (sec: number) => new Date(startedAt.getTime() + sec * 1000).toISOString();
   const A: AuditEvent[] = [];
-  const add = (sec: number, type: string, message: string, data?: Record<string, unknown>, severity: AuditEvent["severity"] = "info", actor = "AI agent") =>
+  const add = (sec: number, type: string, message: string, data?: Record<string, unknown>, severity: AuditEvent["severity"] = "info", actor = "Phone line") =>
     A.push({ leadId, callId: call.id, at: at(sec), type, actor, message, data, severity });
 
   add(0, "CALL_RECEIVED", `Inbound call from ${args.phone}${lead.afterHours ? " (after hours)" : ""}`, undefined, "info", "Telephony");
@@ -160,9 +160,9 @@ export async function completeCall(args: {
     }
   } else if (q.decision === "NEEDS_HUMAN_REVIEW") {
     lead.designerAssigned = lead.highValue ? `${OWNER} (Principal)` : "Front desk review";
-    add(endSec + 1, "HUMAN_REVIEW_CREATED", `Review task created — ${q.reviewReasons[0] ?? "needs a human decision"}`, { reasons: q.reviewReasons, missing: q.missing, next: q.recommendedAction }, "warn", "Decision engine");
+    add(endSec + 1, "HUMAN_REVIEW_CREATED", `Review task created — ${q.reviewReasons[0] ?? "needs a human decision"}`, { reasons: q.reviewReasons, missing: q.missing, next: q.recommendedAction }, "warn", "System");
   } else {
-    add(endSec + 1, "NO_HANDOFF", "Not qualified — polite close, no designer handoff", { reason: q.reason }, "info", "Decision engine");
+    add(endSec + 1, "NO_HANDOFF", "Not qualified — polite close, no designer handoff", { reason: q.reason }, "info", "System");
   }
 
   const c = args.q;

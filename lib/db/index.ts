@@ -192,14 +192,35 @@ export async function saveBaseline(b: Baseline, q?: Q) {
   await c.query("INSERT INTO baseline (id, data) VALUES (1, $1) ON CONFLICT (id) DO UPDATE SET data=$1", [JSON.stringify(b)]);
 }
 
+const DELETE_DEMO = `
+  DELETE FROM audit_events WHERE lead_id IN (SELECT id FROM leads WHERE is_demo);
+  DELETE FROM overrides WHERE lead_id IN (SELECT id FROM leads WHERE is_demo);
+  DELETE FROM calls WHERE lead_id IN (SELECT id FROM leads WHERE is_demo);
+  DELETE FROM leads WHERE is_demo;
+  DELETE FROM baseline WHERE data->>'source' = 'DEMO_ASSUMPTION';`;
+
+/** Re-seed the demo data. Only demo rows are touched; real enquiries are never deleted. */
 export async function resetDemo() {
   const c = await pool().connect();
   try {
     await c.query("BEGIN");
-    await c.query("DELETE FROM audit_events; DELETE FROM overrides; DELETE FROM calls; DELETE FROM leads; DELETE FROM baseline; DELETE FROM meta WHERE key='seeded';");
+    await c.query(DELETE_DEMO);
+    await c.query("DELETE FROM meta WHERE key='seeded'");
     const { seedDemo } = await import("../seed/seed");
-    await seedDemo(c);
+    const { rows } = await c.query("SELECT 1 FROM baseline WHERE id=1");
+    await seedDemo(c, { keepBaseline: rows.length > 0 });
     await c.query("INSERT INTO meta (key, value) VALUES ('seeded', $1)", [JSON.stringify({ at: new Date().toISOString() })]);
+    await c.query("COMMIT");
+  } catch (e) { await c.query("ROLLBACK"); throw e; } finally { c.release(); }
+}
+
+/** Go live: remove every demo row and stop the demo from re-seeding. Real enquiries are kept. */
+export async function clearDemo() {
+  const c = await pool().connect();
+  try {
+    await c.query("BEGIN");
+    await c.query(DELETE_DEMO);
+    await c.query("INSERT INTO meta (key, value) VALUES ('seeded', $1) ON CONFLICT (key) DO UPDATE SET value = $1", [JSON.stringify({ cleared: new Date().toISOString() })]);
     await c.query("COMMIT");
   } catch (e) { await c.query("ROLLBACK"); throw e; } finally { c.release(); }
 }

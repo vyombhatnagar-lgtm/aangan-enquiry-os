@@ -33,7 +33,7 @@ export const DEMO_BASELINE = {
   updatedAt: new Date().toISOString(),
 };
 
-export async function seedDemo(c: PoolClient) {
+export async function seedDemo(c: PoolClient, opts: { keepBaseline?: boolean } = {}) {
   let seq = 0;
   for (const s of SEED) {
     const at = istToDate(s.at);
@@ -83,5 +83,5 @@ export async function seedDemo(c: PoolClient) {
     if (o?.lost) l = await applyAction(l, { action: "lost", user: "Nikhil (demo seed)", reason: o.lost, at: plus(end, 12 * 24 * 60) }, { q: c });
     if (o || s.override) { l.intel = await analyzeCall(l, r.transcript, { useLLM: false }); l.callClass = l.intel.callClass; await saveLead(l, c); }
   }
-  await saveBaseline(DEMO_BASELINE, c);
+  if (!opts.keepBaseline) await saveBaseline(DEMO_BASELINE, c);
 }

@@ -132,7 +132,7 @@ export function respondStep(state: AgentState, utterance: string, changed: Recor
   const faq = answerFaq(t);
   if (faq.text && !cs.faqAnswered.includes(faq.id!)) { parts.push(faq.text); kb.push(faq.kb!); cs.faqAnswered.push(faq.id!); }
   const svcQ = answerServiceQuestion(t, cs);
-  if (svcQ.text) { parts.push(svcQ.text); kb.push(svcQ.kb!); if (svcQ.kb?.includes("escalate")) events.push({ type: "KB_GAP", message: "Service question not covered by services.md", severity: "warn", data: { utterance: t } }); }
+  if (svcQ.text) { parts.push(svcQ.text); kb.push(svcQ.kb!); if (svcQ.kb?.includes("escalate")) events.push({ type: "KB_GAP", message: "Caller asked about a service the line had no answer for", severity: "warn", data: { utterance: t } }); }
 
   if (!parts.length || Object.keys(changed).length) parts.unshift(ack(changed, cs, state.turns));
 

@@ -28,9 +28,8 @@ export default async function LeadsPage({ searchParams }: { searchParams: Promis
     <div className="page">
       <div className="page-head">
         <div>
-          <div className="eyebrow">Operations</div>
           <h1>Enquiries</h1>
-          <p>Every inbound call is a lead record, including calls that failed — those are enquiries too, until someone calls back.</p>
+          <div className="small muted">Every inbound call, including missed ones.</div>
         </div>
         <Link href="/simulate" className="btn terra">Simulate incoming call</Link>
       </div>
@@ -50,7 +49,7 @@ export default async function LeadsPage({ searchParams }: { searchParams: Promis
       <div className="small muted" style={{ marginBottom: 8 }}>{leads.length} of {all.length} enquiries</div>
       <div className="card tbl-wrap">
         <table className="tbl">
-          <thead><tr><th>Received</th><th>Customer</th><th>Project</th><th className="r">Area</th><th>Budget</th><th>AI</th><th>Stage</th><th>Designer</th><th className="r">Value</th></tr></thead>
+          <thead><tr><th>Received</th><th>Customer</th><th>Project</th><th className="r">Area</th><th>Budget</th><th>Result</th><th>Stage</th><th>Designer</th><th className="r">Value</th></tr></thead>
           <tbody>
             {leads.map((l) => (
               <tr key={l.id}>
@@ -59,8 +58,8 @@ export default async function LeadsPage({ searchParams }: { searchParams: Promis
                 <td className="small">{l.projectType ?? "—"}{l.location && <div className="tiny muted">{l.location}</div>}</td>
                 <td className="r small">{l.approximateArea ? l.approximateArea.toLocaleString("en-IN") : "—"}</td>
                 <td className="small">{l.budget ?? "—"}</td>
-                <td><Pill s={l.aiDecision ?? "NEW"} />{l.confidenceScore != null && <div className="tiny muted mono" style={{ marginTop: 3 }}>conf {l.confidenceScore}</div>}</td>
-                <td><Pill s={l.status} />{l.decision !== l.aiDecision && l.aiDecision && <div className="tiny" style={{ color: "var(--ochre)", marginTop: 3 }}>human override</div>}</td>
+                <td><Pill s={l.decision ?? "NEW"} />{l.confidenceScore != null && <div className="tiny muted mono" style={{ marginTop: 3 }}>{Math.round(l.confidenceScore * 100)}%</div>}</td>
+                <td><Pill s={l.status} />{l.decision !== l.aiDecision && l.aiDecision && <div className="tiny" style={{ color: "var(--amber)", marginTop: 3 }}>changed by staff</div>}</td>
                 <td className="small">{l.designerAssigned ?? "—"}</td>
                 <td className="r"><Money v={l.projectValue} short /></td>
               </tr>

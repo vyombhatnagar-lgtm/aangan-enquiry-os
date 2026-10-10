@@ -15,7 +15,7 @@ export const RATE_CARD = {
   orchestrationPerCall: 0.4, // hosting, DB, logging share
   failedCallMinutes: 0.3,
   /** Fixed monthly costs, prorated over the reporting period. */
-  fixedMonthly: { "Indian DID number rental": 1500, "Hosting (Vercel Pro)": 1750, "Database (Neon)": 1600 } as Record<string, number>,
+  fixedMonthly: { "Phone number rental": 1500, "Hosting": 1750, "Database": 1600 } as Record<string, number>,
 };
 
 export function fixedCostFor(days: number) {

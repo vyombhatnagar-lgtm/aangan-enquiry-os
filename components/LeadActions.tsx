@@ -73,7 +73,7 @@ export function LeadActions({ lead }: { lead: Lead }) {
       </div>
 
       <div style={{ borderTop: "1px solid var(--rule)", paddingTop: 12 }}>
-        <div className="eyebrow" style={{ marginBottom: 6 }}>Override the AI · AI said {lead.aiDecision?.replace(/_/g, " ").toLowerCase() ?? "nothing"}</div>
+        <div className="eyebrow" style={{ marginBottom: 6 }}>Change decision · currently {lead.decision?.replace(/_/g, " ").toLowerCase() ?? "none"}</div>
         <div className="row" style={{ gap: 6 }}>
           <select value={ovStatus} onChange={(e) => setOvStatus(e.target.value)} style={{ flex: 1 }} aria-label="Human decision">
             <option value="QUALIFIED">Qualified</option>
@@ -81,8 +81,8 @@ export function LeadActions({ lead }: { lead: Lead }) {
             <option value="NEEDS_HUMAN_REVIEW">Needs review</option>
           </select>
         </div>
-        <textarea rows={2} placeholder="Reason (required) — this is how qualified.md gets better" value={ovReason} onChange={(e) => setOvReason(e.target.value)} style={{ width: "100%", marginTop: 6 }} />
-        <button className="btn sm primary" style={{ marginTop: 6 }} disabled={!!busy || !ovReason.trim()} onClick={() => act("override", { status: ovStatus, reason: ovReason })}>{busy === "override" ? "Saving…" : "Record override"}</button>
+        <textarea rows={2} placeholder="Reason (required)" value={ovReason} onChange={(e) => setOvReason(e.target.value)} style={{ width: "100%", marginTop: 6 }} />
+        <button className="btn sm primary" style={{ marginTop: 6 }} disabled={!!busy || !ovReason.trim()} onClick={() => act("override", { status: ovStatus, reason: ovReason })}>{busy === "override" ? "Saving…" : "Save change"}</button>
       </div>
       {err && <div className="callout err">{err}</div>}
     </div>

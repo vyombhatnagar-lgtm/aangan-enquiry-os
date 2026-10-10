@@ -36,7 +36,7 @@ export async function ingestTranscript(args: {
       lastAgent = t.text;
       // guardrail audit: the platform's agent spoke live, so we check what it said afterwards
       const bad = unapprovedAmounts(t.text, state.cs);
-      if (bad.length) events.push({ type: "PRICING_GUARDRAIL_BREACH", severity: "error", message: `Agent said figures not in pricing.md: ${bad.join(", ")}`, offset: t.at, data: { text: t.text } });
+      if (bad.length) events.push({ type: "PRICING_GUARDRAIL_BREACH", severity: "error", message: `Price not on the approved list: ${bad.join(", ")}`, offset: t.at, data: { text: t.text } });
       if (/\b(per (square|sq)|lakh|crore|₹)/i.test(t.text) && /indicative|varies|approximately|roughly|range/i.test(t.text)) {
         state.cs.pricingGiven = true;
         state.cs.pricingText = state.cs.pricingText ?? `Agent said: "${t.text.slice(0, 220)}"`;

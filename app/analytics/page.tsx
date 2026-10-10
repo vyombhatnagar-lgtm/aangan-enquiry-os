@@ -1,4 +1,5 @@
 import { loadAll } from "@/lib/data";
+import { ClearDemo } from "@/components/ClearDemo";
 import { inr, inrShort, pct, pp } from "@/lib/format";
 import { Funnel, SecHead, Stat } from "@/components/ui";
 import { BaselineForm } from "@/components/BaselineForm";
@@ -13,7 +14,7 @@ function Change({ a, b, money, rate }: { a: number | null; b: number | null; mon
 }
 
 export default async function Analytics() {
-  const { metrics: m } = await loadAll();
+  const { metrics: m, leads } = await loadAll();
   const b = m.experiment.baseline;
   const a = m.experiment.automation;
   const N = a.enquiries;
@@ -42,26 +43,25 @@ export default async function Analytics() {
     <div className="page">
       <div className="page-head">
         <div>
-          <div className="eyebrow">Business</div>
-          <h1>Analytics & ROI</h1>
-          <p>The test is not &ldquo;did the AI answer calls&rdquo; but &ldquo;did more enquiries become projects&rdquo;. Business rows are highlighted; everything else is supporting evidence.</p>
+          <h1>Performance</h1>
+          <div className="small muted">Are more enquiries turning into projects than before?</div>
         </div>
       </div>
 
-      <div className={`callout ${m.roi.status === "CAUSAL" ? "ok" : ""}`} style={{ marginBottom: 22 }}><b>{m.roi.status === "CAUSAL" ? "Causal evidence." : "ROI cannot yet be causally established."}</b> {m.roi.statusText.replace(/^ROI cannot yet be causally established — /, "")}</div>
+      <div className={`callout ${m.roi.status === "CAUSAL" ? "ok" : ""}`} style={{ marginBottom: 22 }}><b>{m.roi.status === "CAUSAL" ? "The improvement is confirmed." : "Not proven yet."}</b> {m.roi.statusText.replace(/^Not proven — /, "")}</div>
 
       <div className="grid g4">
         <Stat hero cls="terra" tag="lag" label="Project conversion" value={pct(m.business.conversion)} sub={`${m.business.won} won ÷ ${N} enquiries`} />
-        <Stat hero cls="terra" tag="lag" label="Revenue generated" value={inrShort(m.business.revenue)} sub="Σ value of won projects" />
+        <Stat hero cls="terra" tag="lag" label="Revenue generated" value={inrShort(m.business.revenue)} sub="total value of won projects" />
         <Stat cls="terra" tag="lag" label="Revenue per enquiry" value={inrShort(m.business.revenuePerEnquiry)} />
         <Stat cls="terra" tag="lag" label="Revenue per qualified lead" value={inrShort(m.business.revenuePerQualified)} />
       </div>
 
       <section className="sec">
-        <SecHead eyebrow="Baseline vs automation" title="Did anything change?" right={b ? <>{b.label} · {b.period} · <span className={demo ? "badge demo" : "badge"}>{demo ? "DEMO ASSUMPTION" : "entered"}</span></> : "no baseline"} />
+        <SecHead eyebrow="Baseline vs automation" title="Did anything change?" right={b ? <>{b.label} · {b.period} · <span className={demo ? "badge demo" : "badge"}>{demo ? "sample figure" : "entered"}</span></> : "no baseline"} />
         <div className="card tbl-wrap">
           <table className="tbl">
-            <thead><tr><th>Metric</th><th className="r">Baseline</th><th className="r">Current (AI-assisted)</th><th className="r">Change</th></tr></thead>
+            <thead><tr><th>Metric</th><th className="r">Baseline</th><th className="r">Now</th><th className="r">Change</th></tr></thead>
             <tbody>{rows.map((x) => <tr key={x.k} className={x.biz ? "biz" : ""}><td>{x.label}</td><td className="r">{x.base}</td><td className="r">{x.cur}</td><td className="r">{x.change}</td></tr>)}</tbody>
           </table>
         </div>
@@ -82,7 +82,7 @@ export default async function Analytics() {
       </section>
 
       <section className="sec">
-        <SecHead eyebrow="ROI" title="Revenue − cost, done honestly" />
+        <SecHead eyebrow="ROI" title="Revenue minus cost" />
         <div className="grid g2">
           <div className="card card-pad ledger" style={{ borderLeft: 0 }}>
             <div className="eyebrow">Gross (all revenue through the system)</div>
@@ -116,13 +116,11 @@ export default async function Analytics() {
       </section>
 
       <section className="sec" id="experiment">
-        <SecHead eyebrow="Experiment / validation" title="Faster, better-qualified handling → more projects?" />
+        <SecHead eyebrow="Before vs now" title="Is the change real?" />
         <div className="grid" style={{ gridTemplateColumns: "minmax(0, 1fr) minmax(0, 1fr)" }}>
           <div className="card card-pad">
-            <div className="eyebrow" style={{ marginBottom: 8 }}>Hypothesis</div>
-            <p style={{ fontFamily: "var(--serif)", fontSize: 19, fontStyle: "italic", margin: "0 0 16px" }}>Faster and better-qualified inbound enquiry handling increases enquiry-to-project conversion.</p>
             <table className="tbl">
-              <thead><tr><th /><th className="r">Baseline cohort</th><th className="r">Automation cohort</th></tr></thead>
+              <thead><tr><th /><th className="r">Before</th><th className="r">Now</th></tr></thead>
               <tbody>
                 <tr><td>Enquiries</td><td className="r">{b?.enquiries ?? "—"}</td><td className="r">{N}</td></tr>
                 <tr><td>Response &lt; 5 min</td><td className="r">{pct(bRate("responded5min"), 0)}</td><td className="r">{pct(r(a.within5, N), 0)}</td></tr>
@@ -135,16 +133,16 @@ export default async function Analytics() {
           </div>
           <div className="card card-pad">
             <div className="grid g2">
-              <Stat label="Conversion lift" value={pp(m.experiment.lift)} sub="automation − baseline" />
-              <Stat label="Relative lift" value={m.experiment.relLift != null ? `${(m.experiment.relLift * 100).toFixed(0)}%` : "—"} sub="(auto − base) ÷ base" />
-              <Stat label="p-value" value={m.experiment.pValue != null ? m.experiment.pValue.toFixed(4) : "—"} sub="two-proportion z-test" />
-              <Stat label="Sample needed / arm" value={m.experiment.minSamplePerArm ?? "—"} sub="α 0.05, power 0.8, at this lift" />
+              <Stat label="Conversion lift" value={pp(m.experiment.lift)} sub="percentage points" />
+              <Stat label="Relative lift" value={m.experiment.relLift != null ? `${(m.experiment.relLift * 100).toFixed(0)}%` : "—"} sub="vs before" />
+              <Stat label="Chance it's luck" value={m.experiment.pValue != null ? (m.experiment.pValue < 0.001 ? "<0.1%" : `${(m.experiment.pValue * 100).toFixed(1)}%`) : "—"} sub="lower is better" />
+              <Stat label="Enquiries needed" value={m.experiment.minSamplePerArm ?? "—"} sub="per group, to be sure" />
             </div>
             <div className="callout" style={{ marginTop: 14 }}>
-              <b>Can we claim causality?</b> {m.roi.status === "CAUSAL" ? "Yes — randomised, significant, real baseline." : <>No. {demo ? "The baseline is invented for the demo. " : ""}{b?.design !== "RANDOMISED" ? "A before/after comparison can't separate the AI's effect from seasonality (Diwali), marketing, or pricing changes. " : ""}A small p-value here only says the two rates differ, not why.</>}
+              <b>Can we say the phone line caused it?</b> {m.roi.status === "CAUSAL" ? "Yes." : <>Not yet. {demo ? "The \"before\" numbers are sample figures. " : ""}{b?.design !== "RANDOMISED" ? "A before/after comparison can't separate this from season (Diwali), marketing or price changes. " : ""}</>}
             </div>
             <div className="small ink2" style={{ marginTop: 12 }}>
-              <b>To make it causal:</b> route calls by alternate days (or even/odd caller numbers) — one arm to the AI line, one to the front desk — for 6–8 weeks, record outcomes for both the same way, then mark the baseline &ldquo;Randomised&rdquo;. Judge only enquiries at least {m.business.matured.days} days old; younger ones haven&apos;t had time to convert.
+              <b>To prove it:</b> for 6–8 weeks, send calls on alternate days to the new line and to the front desk, record outcomes the same way for both, then mark the comparison &ldquo;Randomised&rdquo; below. Only judge enquiries at least {m.business.matured.days} days old; younger ones haven&apos;t had time to convert.
             </div>
           </div>
         </div>
@@ -169,9 +167,11 @@ export default async function Analytics() {
       </section>
 
       <section className="sec">
-        <SecHead eyebrow="Baseline" title="Enter the real manual-process numbers" right="Without this, the dashboard cannot answer the question" />
+        <SecHead eyebrow="Baseline" title="Your numbers from before" right="Needed to tell whether anything improved" />
         <div className="card card-pad"><BaselineForm b={b} /></div>
       </section>
+
+      <section className="sec"><ClearDemo count={leads.filter((l) => l.isDemo).length} /></section>
     </div>
   );
 }

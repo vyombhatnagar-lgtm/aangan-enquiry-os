@@ -12,7 +12,7 @@ export const dynamic = "force-dynamic";
  */
 export async function POST(req: Request) {
   const secret = process.env.TELEPHONY_WEBHOOK_SECRET;
-  if (secret && req.headers.get("x-aangan-secret") !== secret) return NextResponse.json({ error: "unauthorised" }, { status: 401 });
+  if ((secret || process.env.NODE_ENV === "production") && req.headers.get("x-aangan-secret") !== secret) return NextResponse.json({ error: "unauthorised" }, { status: 401 });
   try {
     await ready();
     const b = (await req.json()) as { phone: string; startedAt?: string; transcript: { role: string; text: string; secondsFromStart?: number }[]; entities?: Record<string, unknown> };

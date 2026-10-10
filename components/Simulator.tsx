@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import type { Lead, RuleResult, Turn } from "@/lib/types";
 import { Phone } from "./ui";
+import { plain } from "@/lib/format";
 
 type Scenario = { key: string; title: string; expect: string; blurb: string };
 type Snap = Record<string, unknown>;
@@ -25,7 +26,7 @@ export function Simulator({ scenarios, threshold }: { scenarios: Scenario[]; thr
   const [turns, setTurns] = useState<Turn[]>([]);
   const [snap, setSnap] = useState<Snap>({});
   const [flash, setFlash] = useState<string[]>([]);
-  const [kb, setKb] = useState<string[]>([]);
+  const [, setKb] = useState<string[]>([]);
   const [typing, setTyping] = useState(false);
   const [result, setResult] = useState<Result | null>(null);
   const [progress, setProgress] = useState(0);
@@ -177,7 +178,7 @@ export function Simulator({ scenarios, threshold }: { scenarios: Scenario[]; thr
       {/* —— left: choose —— */}
       <div className="scen-col">
         <div className="seg" style={{ marginBottom: 12 }}>
-          <button className={mode === "script" ? "on" : ""} onClick={() => { reset(); setMode("script"); }}>Scripted caller</button>
+          <button className={mode === "script" ? "on" : ""} onClick={() => { reset(); setMode("script"); }}>Sample caller</button>
           <button className={mode === "voice" ? "on" : ""} onClick={() => { reset(); setMode("voice"); }}>Be the caller</button>
         </div>
         {mode === "script" ? (
@@ -185,7 +186,7 @@ export function Simulator({ scenarios, threshold }: { scenarios: Scenario[]; thr
             <div className="scen">
               {scenarios.map((s) => (
                 <button key={s.key} className={sel === s.key ? "on" : ""} onClick={() => setSel(s.key)} disabled={phase === "ringing" || phase === "talking"}>
-                  <b>{s.title}</b><small>{s.blurb}</small><em>expect → {s.expect}</em>
+                  <b>{s.title}</b><small>{s.blurb}</small>
                 </button>
               ))}
             </div>
@@ -194,15 +195,13 @@ export function Simulator({ scenarios, threshold }: { scenarios: Scenario[]; thr
               <span className="tiny muted">Playback</span>
               <div className="seg">{[1, 2, 4, 20].map((s) => <button key={s} className={speed === s ? "on" : ""} onClick={() => setSpeed(s)}>{s === 20 ? "instant" : `${s}×`}</button>)}</div>
             </div>
-            <p className="tiny muted" style={{ marginTop: 12, lineHeight: 1.5 }}>The caller is simulated from a fact sheet — it answers whatever the agent asks. The agent, extraction, qualification, pricing and handoff are the real engine, and every call is saved to Postgres.</p>
           </>
         ) : (
           <div className="card card-pad small">
             <h3 style={{ marginBottom: 8 }}>You are the customer</h3>
             <p className="ink2" style={{ margin: "0 0 10px" }}>Start the call, then speak (Chrome, mic permission) or type. Try: <i>&ldquo;Hi, I need interiors for my 2 BHK in Aundh&rdquo;</i>, ask what it costs, or ask for a final quote.</p>
             {!voiceOk && <div className="callout" style={{ marginBottom: 10 }}>This browser has no speech recognition — type your replies instead.</div>}
-            <label className="row" style={{ gap: 8 }}><input type="checkbox" checked={speak} onChange={(e) => setSpeak(e.target.checked)} /> Read the agent&apos;s replies aloud</label>
-            <p className="tiny muted" style={{ marginTop: 10 }}>Your words go to the same pipeline a telephony provider would feed. With AI Gateway configured, the model fills fields the rules miss; services and prices still come only from the knowledge files.</p>
+            <label className="row" style={{ gap: 8 }}><input type="checkbox" checked={speak} onChange={(e) => setSpeak(e.target.checked)} /> Read replies aloud</label>
           </div>
         )}
       </div>
@@ -212,18 +211,18 @@ export function Simulator({ scenarios, threshold }: { scenarios: Scenario[]; thr
         <div className="phone-top">
           <div>
             <div className="who">{(snap.name as string) || (phase === "idle" ? "Aangan Studio line" : "Unknown caller")}</div>
-            <div className="meta">{phase === "idle" ? "+91 20 · demo line" : phase === "ringing" ? "incoming…" : phase === "done" ? `call ended · ${lead?.id ?? ""}` : <>on call · {mins}:{secs} <span className="wave" style={{ color: "var(--sage)", marginLeft: 6 }}><i /><i /><i /><i /><i /></span></>}</div>
+            <div className="meta">{phase === "idle" ? "+91 20 · demo line" : phase === "ringing" ? "incoming…" : phase === "done" ? `call ended · ${lead?.id ?? ""}` : <>on call · {mins}:{secs} <span className="wave" style={{ color: "var(--green)", marginLeft: 6 }}><i /><i /><i /><i /><i /></span></>}</div>
           </div>
           {phase === "idle" || phase === "done" ? (
-            <button className="btn terra" onClick={isLive ? startLive : runScript}><Phone size={15} /> {phase === "done" ? "New call" : isLive ? "Start call" : "Ring the line"}</button>
+            <button className="btn terra" onClick={isLive ? startLive : runScript}><Phone size={15} /> {phase === "done" ? "New call" : isLive ? "Start call" : "Start call"}</button>
           ) : isLive ? <button className="btn danger" onClick={hangUp}>Hang up</button> : <button className="btn" onClick={() => { speedRef.current = 80; }}>Skip to end</button>}
         </div>
         {phase === "idle" || phase === "ringing" ? (
           <div className="phone-idle">
             <div>
               <div className={`ringer ${phase === "ringing" ? "ringing" : ""}`}><Phone size={38} /></div>
-              <div className="num" style={{ fontSize: 24, color: "var(--ink)" }}>{phase === "ringing" ? "Ringing…" : "Nobody waits for 10 AM."}</div>
-              <p className="small" style={{ maxWidth: "36ch", margin: "8px auto 0" }}>{phase === "ringing" ? "The agent answers in about 2 seconds." : "A third of Aangan's calls arrive outside 10–7. Ring the line to see one handled end-to-end — from hello to a designer's Telegram."}</p>
+              <div className="num" style={{ fontSize: 24, color: "var(--ink)" }}>{phase === "ringing" ? "Ringing…" : "Ready"}</div>
+              <p className="small" style={{ maxWidth: "36ch", margin: "8px auto 0" }}>{phase === "ringing" ? "Answering…" : "Pick a caller on the left and start the call."}</p>
               {error && <div className="callout err" style={{ marginTop: 14, textAlign: "left" }}>{error}</div>}
             </div>
           </div>
@@ -232,14 +231,13 @@ export function Simulator({ scenarios, threshold }: { scenarios: Scenario[]; thr
             <div className="transcript">
               {turns.map((t, i) => (
                 <div key={i} className={`turn ${t.speaker} fade-in`}>
-                  <div className="who">{t.speaker === "agent" ? "AI" : t.speaker === "caller" ? "Caller" : "Sys"}<small>{Math.floor(t.at / 60)}:{String(Math.floor(t.at % 60)).padStart(2, "0")}</small></div>
+                  <div className="who">{t.speaker === "agent" ? "Aangan" : t.speaker === "caller" ? "Caller" : "Note"}<small>{Math.floor(t.at / 60)}:{String(Math.floor(t.at % 60)).padStart(2, "0")}</small></div>
                   <div>
                     <div className="bubble">{t.text}</div>
-                    {t.meta?.kb?.length ? <div className="kbref">{t.meta.kb.map((k) => <span key={k}>↳ {k}</span>)}</div> : null}
                   </div>
                 </div>
               ))}
-              {typing && <div className="turn agent"><div className="who">AI</div><div className="bubble" style={{ width: 64 }}><span className="typing"><i /><i /><i /></span></div></div>}
+              {typing && <div className="turn agent"><div className="who">Aangan</div><div className="bubble" style={{ width: 64 }}><span className="typing"><i /><i /><i /></span></div></div>}
             </div>
             {isLive && phase === "talking" && (
               <form className="row" style={{ marginTop: 16, flexWrap: "nowrap" }} onSubmit={(e) => { e.preventDefault(); if (draft.trim()) { recRef.current?.stop(); send(draft.trim()); } }}>
@@ -257,7 +255,7 @@ export function Simulator({ scenarios, threshold }: { scenarios: Scenario[]; thr
       {/* —— right: what the agent knows —— */}
       <div className="mind">
         <div className="card card-pad">
-          <div className="panel-title"><div className="eyebrow">What the agent knows</div><span className="tiny muted mono">lead record</span></div>
+          <div className="panel-title"><div className="eyebrow">Captured so far</div></div>
           <dl className="slots" style={{ margin: 0 }}>
             {SLOTS.map(([k, label]) => {
               const v = snap[k];
@@ -265,42 +263,37 @@ export function Simulator({ scenarios, threshold }: { scenarios: Scenario[]; thr
               return (
                 <div key={k} className={`slot ${flash.includes(k) ? "flash" : ""}`}>
                   <dt>{label}</dt>
-                  <dd className={v ? "" : "empty"}>{v ? (k === "area" ? `${Number(v).toLocaleString("en-IN")} sq ft` : String(v)) : unclear ? <span style={{ color: "var(--ochre)" }}>asked — unclear</span> : "—"}</dd>
+                  <dd className={v ? "" : "empty"}>{v ? (k === "area" ? `${Number(v).toLocaleString("en-IN")} sq ft` : String(v)) : unclear ? <span style={{ color: "var(--amber)" }}>asked — unclear</span> : "—"}</dd>
                 </div>
               );
             })}
             <div className={`slot ${flash.includes("requirements") ? "flash" : ""}`}><dt>Needs</dt><dd className={(snap.requirements as string[] | undefined)?.length ? "" : "empty"}>{(snap.requirements as string[] | undefined)?.join(", ") || "—"}</dd></div>
           </dl>
           {(snap.contradictions as string[] | undefined)?.length ? <div className="callout" style={{ marginTop: 10, fontSize: 12.5 }}>⚠ {(snap.contradictions as string[]).join("; ")}</div> : null}
-          {Number(snap.corrections) > 0 && <div className="tiny" style={{ color: "var(--ochre)", marginTop: 8 }}>Caller corrected themselves {String(snap.corrections)}×</div>}
+          {Number(snap.corrections) > 0 && <div className="tiny" style={{ color: "var(--amber)", marginTop: 8 }}>Caller corrected themselves {String(snap.corrections)}×</div>}
         </div>
 
         <div className="card card-pad">
-          <div className="panel-title"><div className="eyebrow">Indicative pricing</div><span className="tiny muted mono">pricing.md</span></div>
-          {snap.pricing ? <div className="small">{String(snap.pricing)}</div> : <div className="small muted">Not discussed yet. Ranges come only from pricing.md and always carry the &ldquo;varies by site&rdquo; caveat. Never a quote.</div>}
-        </div>
-
-        <div className="card card-pad">
-          <div className="panel-title"><div className="eyebrow">Knowledge retrieved</div></div>
-          {kb.length ? <div className="kbref">{kb.map((k) => <span key={k}>{k}</span>)}</div> : <div className="small muted">Nothing retrieved yet.</div>}
+          <div className="panel-title"><div className="eyebrow">Price range given</div></div>
+          {snap.pricing ? <div className="small">{String(snap.pricing)}</div> : <div className="small muted">Not discussed yet.</div>}
         </div>
 
         <div className="card card-pad">
           <div className="cost-meter"><span className="eyebrow">Cost of this call</span><b className="num">₹{costShown.toFixed(2)}</b></div>
-          {result && phase === "done" && <div className="tiny muted mono" style={{ marginTop: 8, lineHeight: 1.7 }}>telephony ₹{result.call.cost.telephony.toFixed(2)} · STT ₹{result.call.cost.transcription.toFixed(2)} · TTS ₹{result.call.cost.tts.toFixed(2)} · LLM ₹{result.call.cost.llm.toFixed(2)} · other ₹{result.call.cost.other.toFixed(2)}</div>}
+          {result && phase === "done" && <div className="tiny muted mono" style={{ marginTop: 8, lineHeight: 1.7 }}>phone ₹{result.call.cost.telephony.toFixed(2)} · voice ₹{(result.call.cost.transcription + result.call.cost.tts).toFixed(2)} · processing ₹{(result.call.cost.llm + result.call.cost.other).toFixed(2)}</div>}
         </div>
       </div>
     </div>
   );
 }
 
-function Outcome({ q, lead, threshold }: { q: Qual; lead: Lead; threshold: number }) {
+function Outcome({ q, lead }: { q: Qual; lead: Lead; threshold: number }) {
   return (
     <div className="fade-in" style={{ marginTop: 22, borderTop: "1px solid var(--rule)", paddingTop: 10 }}>
-      <div className="stampbox"><div className={`stamp ${q.decision}`}>{q.decision.replace(/_/g, " ")}<small>confidence {q.confidence} · threshold {threshold}</small></div></div>
-      <p className="small ink2" style={{ textAlign: "center", maxWidth: "56ch", margin: "10px auto 16px" }}>{q.reason}</p>
+      <div className="stampbox"><div className={`stamp ${q.decision}`}>{q.decision.replace(/_/g, " ")}<small>confidence {Math.round(q.confidence * 100)}%</small></div></div>
+      <p className="small ink2" style={{ textAlign: "center", maxWidth: "56ch", margin: "10px auto 16px" }}>{plain(q.reason)}</p>
       <div className="rules" style={{ marginBottom: 16 }}>
-        {q.rules.map((r) => <div key={r.id} className={`rule ${r.result}`}><span className="id">{r.id}</span><span className="res">{r.result}</span><span>{r.name}: {r.detail}<span className="src">{r.source}</span></span></div>)}
+        {q.rules.map((r) => <div key={r.id} className={`rule ${r.result}`}><span className="res">{r.result}</span><span>{r.name}: {plain(r.detail)}</span></div>)}
       </div>
       {lead.designerHandoffStatus !== "NOT_SENT" && lead.handoffMessage ? (
         <div className="grid g2" style={{ alignItems: "start" }}>
@@ -308,26 +301,25 @@ function Outcome({ q, lead, threshold }: { q: Qual; lead: Lead; threshold: numbe
             <div className="tg-head"><div className="tg-av">A</div><div><div style={{ fontWeight: 600 }}>Aangan Enquiries</div><div style={{ fontSize: 11, color: "#7f91a4" }}>bot · to {lead.designerAssigned}</div></div></div>
             <div className="tg-msg">{lead.handoffMessage}</div>
             <div className="tg-btns"><span>✅ Acknowledge</span><span>📞 Contacted</span></div>
-            <div className="tg-meta"><span>{lead.handoffChannel === "telegram" ? "delivered via Telegram" : "simulated — Telegram not configured"}</span><span>✓✓</span></div>
+            <div className="tg-meta"><span>{lead.handoffChannel === "telegram" ? "delivered via Telegram" : "Telegram not connected — saved here only"}</span><span>✓✓</span></div>
           </div>
           <div className="small">
             <h3>Handed to {lead.designerAssigned}</h3>
             <p className="ink2">{lead.recommendedAction}</p>
-            <p className="tiny muted">Telegram is only the nudge. The full record — transcript, rules, pricing said, audit trail — stays in the database.</p>
-            <Link className="btn primary" href={`/leads/${lead.id}`}>Open lead · record outcome →</Link>
+                        <Link className="btn primary" href={`/leads/${lead.id}`}>Open lead · record outcome →</Link>
           </div>
         </div>
       ) : q.decision === "NEEDS_HUMAN_REVIEW" ? (
         <div className="callout">
           <b>Review task created</b> for {lead.designerAssigned}.
-          <ul style={{ margin: "6px 0", paddingLeft: 18 }}>{q.reviewReasons.slice(0, 4).map((r) => <li key={r}>{r}</li>)}</ul>
+          <ul style={{ margin: "6px 0", paddingLeft: 18 }}>{q.reviewReasons.slice(0, 4).map((r, i) => <li key={i}>{plain(r)}</li>)}</ul>
           {q.missing.length > 0 && <div>Missing: {q.missing.join(", ")}</div>}
           <div style={{ marginTop: 6 }}><b>Next:</b> {q.recommendedAction}</div>
           <div className="row" style={{ marginTop: 10 }}><Link className="btn sm primary" href={`/leads/${lead.id}`}>Open lead · override →</Link><Link className="btn sm" href="/failures">Review queue</Link></div>
         </div>
       ) : (
         <div className="callout info">
-          <b>No designer handoff.</b> The caller got a polite, honest answer and the enquiry is on record. {q.recommendedAction}
+          <b>Not passed to a designer.</b> The enquiry is saved. {q.recommendedAction}
           <div className="row" style={{ marginTop: 10 }}><Link className="btn sm" href={`/leads/${lead.id}`}>Open lead · override if wrong →</Link></div>
         </div>
       )}

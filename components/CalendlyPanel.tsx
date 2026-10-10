@@ -40,7 +40,7 @@ export function CalendlyPanel({ lead, live, webhook }: { lead: Lead; live: boole
         <button className="btn sm" onClick={() => navigator.clipboard.writeText(url).then(() => { setCopied(true); setTimeout(() => setCopied(false), 1500); })}>{copied ? "Copied" : "Copy"}</button>
       </div>
       <a className="btn sm terra" href={url} target="_blank" rel="noreferrer">Open Calendly · book for them ↗</a>
-      <div className="tiny muted">Prefilled with name and phone. <code>utm_campaign={lead.id}</code> ties the booking back to this lead.{!live && " Using a placeholder event URL — set CALENDLY_EVENT_URL."}{live && !webhook && " Webhook signing key not set — bookings won't sync automatically."}</div>
+      <div className="tiny muted">Prefilled with the customer's name and phone.{!live && " Booking page not connected yet."}{live && !webhook && " Bookings won't update here automatically yet."}</div>
       <div style={{ borderTop: "1px dashed var(--rule)", paddingTop: 8 }}>
         <div className="tiny muted" style={{ marginBottom: 6 }}>Demo: play the customer&apos;s side through the real webhook handler</div>
         <div className="row" style={{ gap: 6 }}>

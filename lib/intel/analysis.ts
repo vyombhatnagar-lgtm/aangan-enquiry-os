@@ -60,7 +60,7 @@ function heuristic(lead: Lead, transcript: Turn[], callClass: CallClass, classRe
   if (lead.decision === "QUALIFIED" && lead.requirements.length) swot.opportunities.push(`Asked for ${lead.requirements.slice(0, 3).join(", ").toLowerCase()}; also discuss ${upsell.slice(0, 2).join(" and ").toLowerCase()}`);
   if (lead.afterHours) swot.opportunities.push("After-hours caller — a fast morning callback is the edge over studios that let it wait");
   if (lead.indicativePricingShown) swot.opportunities.push("Already heard an indicative range; the consultation can go straight to tiers and finishes");
-  for (const f of fails) swot.threats.push(`${f.id} ${f.name}: ${f.detail}`);
+  for (const f of fails) swot.threats.push(`${f.name}: ${f.detail}`);
   if (objections.some((o) => o.type === "competition")) swot.threats.push("Comparing with other studios");
 
   const qualified = lead.decision === "QUALIFIED";
