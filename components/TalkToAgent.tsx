@@ -58,7 +58,12 @@ export function TalkToAgent({ ready }: { ready: boolean }) {
         if (track.kind === Track.Kind.Audio) { const el = track.attach(); el.autoplay = true; audioBox.current?.appendChild(el); }
       });
       rm.on(RoomEvent.ActiveSpeakersChanged, (sp) => setAgentTalking(sp.some((p) => p.identity !== rm.localParticipant.identity)));
-      rm.on(RoomEvent.Disconnected, () => { setPhase((p) => (p === "live" ? "processing" : p)); });
+      rm.on(RoomEvent.Disconnected, (reason) => { console.info("[talk] disconnected", reason); setPhase((p) => (p === "live" ? "processing" : p)); });
+      rm.on(RoomEvent.ParticipantConnected, (p) => console.info("[talk] joined", p.identity));
+      rm.on(RoomEvent.ParticipantDisconnected, (p) => console.info("[talk] left", p.identity));
+      rm.on(RoomEvent.ConnectionStateChanged, (st) => console.info("[talk] state", st));
+      rm.on(RoomEvent.LocalTrackPublished, (pub) => console.info("[talk] mic published", pub.kind));
+      rm.on(RoomEvent.MediaDevicesError, (e) => console.info("[talk] device error", String(e)));
       await Promise.race([rm.connect(j.url, j.token), new Promise((_, rej) => setTimeout(() => rej(new Error("Couldn't reach the agent — check your connection and try again.")), 15000))]);
       await rm.startAudio().catch(() => {}); // Safari needs this inside the click
       await rm.localParticipant.setMicrophoneEnabled(true);
