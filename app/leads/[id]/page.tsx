@@ -10,6 +10,7 @@ import { Money, Pill } from "@/components/ui";
 import { LeadActions } from "@/components/LeadActions";
 import { CalendlyPanel } from "@/components/CalendlyPanel";
 import { IntelPanel } from "@/components/IntelPanel";
+import { DeleteLead } from "@/components/DeleteLead";
 import { calendlyConfigured, calendlyWebhookConfigured } from "@/lib/calendly";
 
 export const dynamic = "force-dynamic";
@@ -166,6 +167,7 @@ export default async function LeadPage({ params }: { params: Promise<{ id: strin
               <dt>Call cost</dt><dd className="mono">{inr(lead.aiCost, { dp: 2 })}</dd>
             </dl>
             <LeadActions lead={pick} />
+            <div style={{ marginTop: 14, borderTop: "1px solid var(--rule)", paddingTop: 12 }}><div className="tiny muted" style={{ marginBottom: 6 }}>Test call or junk? Remove it from all numbers.</div><DeleteLead id={lead.id} /></div>
           </section>
           {(lead.bookingUrl || lead.decision === "QUALIFIED") && (
             <section className="card card-pad">

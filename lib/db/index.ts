@@ -214,6 +214,19 @@ export async function resetDemo() {
   } catch (e) { await c.query("ROLLBACK"); throw e; } finally { c.release(); }
 }
 
+/** Remove one enquiry and everything attached to it (used for test calls that shouldn't count). */
+export async function deleteLead(id: string) {
+  const c = await pool().connect();
+  try {
+    await c.query("BEGIN");
+    await c.query("DELETE FROM audit_events WHERE lead_id=$1", [id]);
+    await c.query("DELETE FROM overrides WHERE lead_id=$1", [id]);
+    await c.query("DELETE FROM calls WHERE lead_id=$1", [id]);
+    await c.query("DELETE FROM leads WHERE id=$1", [id]);
+    await c.query("COMMIT");
+  } catch (e) { await c.query("ROLLBACK"); throw e; } finally { c.release(); }
+}
+
 /** Go live: remove every demo row and stop the demo from re-seeding. Real enquiries are kept. */
 export async function clearDemo() {
   const c = await pool().connect();

@@ -66,6 +66,11 @@ export async function POST(req: Request, ctx: { params: Promise<{ secret: string
       let turns = parseVaaniTranscript(d.transcript as never);
       if (turns.length) { const t0 = turns[0].at; turns = turns.map((t) => ({ ...t, at: Math.max(0, t.at - t0) + 1.5 })); }
       const callerTurns = turns.filter((t) => t.speaker === "caller").length;
+      if (callerTurns === 0 && outbound) {
+        // a dashboard conversation where nobody spoke (mic blocked, closed early): not an enquiry
+        await setMeta(`outbound:${outbound.callId}`, { ...outbound, status: "failed", error: "Nothing was said on the call" });
+        return NextResponse.json({ ok: true, ignored: "silent test call" });
+      }
       if (callerTurns === 0) {
         // hung up before saying anything: still an enquiry until someone calls back
         const p = istParts(startedAt); const id = `AGN-${p.date.slice(2).replace(/-/g, "")}-V${String(Date.now()).slice(-4)}`;
