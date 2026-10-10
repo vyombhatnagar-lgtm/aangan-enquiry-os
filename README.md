@@ -108,6 +108,12 @@ This prototype has no Indian phone number of its own. To take real calls, a prov
 
 Pune callers will mix Hindi, Marathi and English. Choose STT/TTS that handles code-switching before going live.
 
+## Call my phone (test calls without a number)
+
+Test call → **Call my phone** makes the Vaani agent ring your mobile (Vaani's own default number — no number purchase needed). Talk as the customer; when you hang up, Vaani posts the transcript to the webhook and the enquiry appears with its decision. Test calls are saved as demo enquiries.
+
+Needs `VAANI_API_KEY` (Vaani → Developers → API Keys) in Vercel. Optional: `VAANI_AGENT_ID` (defaults to the Aangan agent), `OUTBOUND_DAILY_LIMIT` (default 20).
+
 ## Go-live checklist
 
 1. **`DASHBOARD_PASSWORD`** — set it. Without it anyone with the URL sees customer names and phone numbers. Browser asks for a password (any username). Webhooks stay reachable.

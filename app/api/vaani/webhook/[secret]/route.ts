@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { audit, getCall, getMeta, ready, saveCall, saveLead, setMeta } from "@/lib/db";
 import { ingestTranscript } from "@/lib/ingest";
-import { getVaaniSecret, parseVaaniTranscript, type VaaniWebhook } from "@/lib/vaani";
+import { getVaaniSecret, parseVaaniTranscript, type OutboundRecord, type VaaniWebhook } from "@/lib/vaani";
 import { appUrl } from "@/lib/data";
 import { callCost } from "@/lib/costs";
 import { isAfterHours, istParts } from "@/lib/format";
@@ -38,33 +38,51 @@ export async function POST(req: Request, ctx: { params: Promise<{ secret: string
     case "call_ended":
       await setMeta(key, { ...r, endReason: e.end_reason, duration: e.call_duration });
       return NextResponse.json({ ok: true });
-    case "call_failed":
-      await audit({ leadId: null, at: now, type: "CALL_FAILED", actor: "Vaani AI", severity: "error", message: `Vaani call failed: ${e.error ?? "unknown"}`, data: { room } });
+    case "call_failed": {
+      const ob = await getMeta<OutboundRecord>(`outbound:${e.call_id ?? e.data?.call_id ?? room}`);
+      if (ob) await setMeta(`outbound:${ob.callId}`, { ...ob, status: "failed", error: String(e.error ?? "call failed") });
+      await audit({ leadId: null, at: now, type: "CALL_FAILED", actor: "Vaani AI", severity: "error", message: `Call failed: ${e.error ?? "unknown"}`, data: { room } });
       return NextResponse.json({ ok: true });
+    }
     case "call_postprocessing": {
       const d = e.data ?? {};
       const callId = `VAANI-${d.call_id ?? e.call_id ?? room}`;
       if (await getCall(callId)) return NextResponse.json({ ok: true, duplicate: true }); // idempotent on retries
       const durationSec = d.call_duration != null ? d.call_duration / 1000 : r.duration ?? 0;
       const startedAt = r.startedAt ? new Date(r.startedAt) : new Date(Date.now() - durationSec * 1000);
-      const phone = r.phone ?? "unknown (Vaani)";
+      // Was this a test call the dashboard placed to someone's own phone? Match by Vaani's id, else by number within 30 min.
+      const ids = [d.call_id, e.call_id, room].filter(Boolean) as string[];
+      let outbound: OutboundRecord | null = null;
+      for (const id of ids) { outbound = await getMeta<OutboundRecord>(`outbound:${id}`); if (outbound) break; }
+      if (!outbound) {
+        const last = await getMeta<OutboundRecord>("outbound:last");
+        const near = last && Date.now() - new Date(last.at).getTime() < 30 * 60_000;
+        const digits = (x?: string) => (x ?? "").replace(/\D/g, "").slice(-10);
+        const outboundId = ids.some((x) => String(x).startsWith("outbound-"));
+        if (last && near && !last.leadId && (outboundId || !r.phone || digits(r.phone) === digits(last.phone))) outbound = (await getMeta<OutboundRecord>(`outbound:${last.callId}`)) ?? last;
+      }
+      const isTest = !!outbound;
+      const phone = outbound?.phone ?? r.phone ?? "unknown (Vaani)";
+      const markOutbound = async (leadId: string) => { if (outbound) { const done = { ...outbound, leadId, status: "done" as const }; await setMeta(`outbound:${outbound.callId}`, done); await setMeta("outbound:last", done); } };
       let turns = parseVaaniTranscript(d.transcript as never);
       if (turns.length) { const t0 = turns[0].at; turns = turns.map((t) => ({ ...t, at: Math.max(0, t.at - t0) + 1.5 })); }
       const callerTurns = turns.filter((t) => t.speaker === "caller").length;
       if (callerTurns === 0) {
         // hung up before saying anything: still an enquiry until someone calls back
         const p = istParts(startedAt); const id = `AGN-${p.date.slice(2).replace(/-/g, "")}-V${String(Date.now()).slice(-4)}`;
-        const lead: Lead = { id, phoneNumber: phone, enquiryDate: p.date, enquiryTime: p.time, enquiryAt: startedAt.toISOString(), source: "PHONE", requirements: [], servicesRequested: [], servicesExcluded: [], status: "NEW", ruleTrace: [], missingFields: ["everything"], reviewReasons: [`Caller hung up before speaking (${d.end_reason ?? r.endReason ?? "no reason"})`], qualificationReason: "Caller hung up — no conversation", recommendedAction: "Call the number back — this is a lost enquiry until someone does.", highValue: false, indicativePricingShown: false, designerHandoffStatus: "NOT_SENT", consultationStatus: "NOT_SCHEDULED", projectOutcome: "PENDING", responseTimeSeconds: turns[0]?.at ?? null, aiCost: 0, afterHours: isAfterHours(startedAt), cohort: "AUTOMATION", engine: "Vaani AI", isDemo: false, createdAt: now, updatedAt: now };
+        const lead: Lead = { id, phoneNumber: phone, enquiryDate: p.date, enquiryTime: p.time, enquiryAt: startedAt.toISOString(), source: "PHONE", requirements: [], servicesRequested: [], servicesExcluded: [], status: "NEW", ruleTrace: [], missingFields: ["everything"], reviewReasons: [`Caller hung up before speaking (${d.end_reason ?? r.endReason ?? "no reason"})`], qualificationReason: "Caller hung up — no conversation", recommendedAction: "Call the number back — this is a lost enquiry until someone does.", highValue: false, indicativePricingShown: false, designerHandoffStatus: "NOT_SENT", consultationStatus: "NOT_SCHEDULED", projectOutcome: "PENDING", responseTimeSeconds: turns[0]?.at ?? null, aiCost: 0, afterHours: isAfterHours(startedAt), cohort: "AUTOMATION", engine: "Vaani AI", isDemo: isTest, createdAt: now, updatedAt: now };
         const cost = callCost(turns.map((t) => ({ ...t })), { handoff: false, failed: true });
         lead.aiCost = cost.total;
         await saveLead(lead);
         await saveCall({ id: callId, leadId: id, phone, startedAt: startedAt.toISOString(), durationSec, status: "ABANDONED", failureReason: lead.reviewReasons[0], afterHours: lead.afterHours, transcript: turns, cost, engine: "Vaani AI" });
         await audit({ leadId: id, callId, at: startedAt.toISOString(), type: "CALL_ABANDONED", actor: "Vaani AI", severity: "error", message: lead.reviewReasons[0] });
+        await markOutbound(id);
         return NextResponse.json({ ok: true, leadId: id, abandoned: true });
       }
       const extraEvents = (r.transfers ?? []).map((t) => ({ type: t.event.toUpperCase(), message: `Vaani ${t.event.replace(/_/g, " ")}${t.detail ? `: ${t.detail}` : ""}`, offset: (new Date(t.at).getTime() - startedAt.getTime()) / 1000, severity: t.event.endsWith("failed") ? "error" as const : "info" as const }));
       if (d.recording_url) extraEvents.push({ type: "RECORDING", message: `Recording: ${d.recording_url}`, offset: durationSec, severity: "info" });
-      const res = await ingestTranscript({ phone, startedAt, turns, entities: d.entities, summary: d.summary ? `${d.summary} (Vaani summary)` : undefined, engine: "Vaani AI", callId, durationSec, appUrl: appUrl(req), extraEvents });
+      const res = await ingestTranscript({ phone, startedAt, turns, entities: d.entities, summary: d.summary ? `${d.summary} (Vaani summary)` : undefined, engine: "Vaani AI", callId, durationSec, appUrl: appUrl(req), extraEvents, isDemo: isTest });
+      await markOutbound(res.lead.id);
       return NextResponse.json({ ok: true, leadId: res.lead.id, decision: res.lead.decision });
     }
     default:

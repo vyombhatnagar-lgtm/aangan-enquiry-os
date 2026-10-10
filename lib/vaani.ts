@@ -127,3 +127,26 @@ function toSec(ts?: string) {
 }
 
 export function vaaniProse() { return proseOf(getKB().services.markdown); }
+
+// ---------- outbound test calls: the agent rings your phone ----------
+export const VAANI_AGENT_ID = process.env.VAANI_AGENT_ID ?? "8f191a5b-6fd8-4256-9337-12b891ef8600";
+export function outboundConfigured() { return !!process.env.VAANI_API_KEY; }
+
+export interface OutboundRecord { callId: string; phone: string; name: string; at: string; leadId?: string; status: "ringing" | "done" | "failed"; error?: string }
+
+/** Normalise an Indian mobile number to +91XXXXXXXXXX, or null if it isn't one. */
+export function indianMobile(raw: string): string | null {
+  const d = raw.replace(/[^\d]/g, "").replace(/^(91|0)(?=\d{10}$)/, "");
+  return /^[6-9]\d{9}$/.test(d) ? `+91${d}` : null;
+}
+
+export async function triggerOutbound(o: { phone: string; name: string; skipDnd: boolean }): Promise<{ callId: string }> {
+  const res = await fetch("https://api.vaanivoice.ai/api/trigger-call/", {
+    method: "POST",
+    headers: { "X-API-Key": process.env.VAANI_API_KEY!, "Content-Type": "application/json" },
+    body: JSON.stringify({ agent_id: VAANI_AGENT_ID, medium: "telephony", contact_number: o.phone, name: o.name, metadata: { test_call: true }, dnd_check_skipped: o.skipDnd }),
+  });
+  const j = (await res.json().catch(() => ({}))) as { success?: boolean; output?: { call_id?: string }; error?: unknown; detail?: unknown; message?: string };
+  if (!res.ok || !j.success || !j.output?.call_id) throw new Error(typeof j.error === "string" ? j.error : j.message ?? `Vaani returned ${res.status}`);
+  return { callId: j.output.call_id };
+}

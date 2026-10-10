@@ -17,7 +17,7 @@ export interface IngestTurn { speaker: "agent" | "caller"; text: string; at: num
 
 export async function ingestTranscript(args: {
   phone: string; startedAt: Date; turns: IngestTurn[]; entities?: Record<string, unknown>; summary?: string;
-  engine: string; callId?: string; durationSec?: number; appUrl?: string; extraEvents?: TimedEvent[];
+  engine: string; callId?: string; durationSec?: number; appUrl?: string; extraEvents?: TimedEvent[]; isDemo?: boolean;
 }) {
   const at = args.startedAt;
   const { state } = startAgent(isAfterHours(at));
@@ -54,7 +54,7 @@ export async function ingestTranscript(args: {
   const answerSec = transcript.find((t) => t.speaker === "agent")?.at ?? 0;
   return completeCall({
     state, transcript, events, phone: args.phone, startedAt: at, callId: args.callId ?? newId("CALL", at), engine: args.engine,
-    isDemo: false, responseTimeSeconds: answerSec, deliverHandoff: true, analyseWithAI: true, appUrl: args.appUrl, summary: args.summary,
+    isDemo: args.isDemo ?? false, responseTimeSeconds: answerSec, deliverHandoff: true, analyseWithAI: true, appUrl: args.appUrl, summary: args.summary,
   });
 }
 
