@@ -11,7 +11,7 @@ import { LeadActions } from "@/components/LeadActions";
 import { CalendlyPanel } from "@/components/CalendlyPanel";
 import { IntelPanel } from "@/components/IntelPanel";
 import { DeleteLead } from "@/components/DeleteLead";
-import { calendlyConfigured, calendlyWebhookConfigured } from "@/lib/calendly";
+import { bookingUrl, calendlyConfigured, calendlyWebhookConfigured } from "@/lib/calendly";
 
 export const dynamic = "force-dynamic";
 
@@ -29,7 +29,7 @@ export default async function LeadPage({ params }: { params: Promise<{ id: strin
   const evTime = (iso: string) => { const p = istParts(iso); return p.date === enq.date ? p.time : `${p.date.slice(5)} ${p.time}`; };
 
   // only what the client widgets need — keeps transcripts, analysis and rule details out of the browser payload
-  const pick = { id: lead.id, decision: lead.decision, projectOutcome: lead.projectOutcome, designerHandoffStatus: lead.designerHandoffStatus, designerContactedAt: lead.designerContactedAt, consultationStatus: lead.consultationStatus, consultationAt: lead.consultationAt, consultationSource: lead.consultationSource, outcomeRecordedBy: lead.outcomeRecordedBy, bookingUrl: lead.bookingUrl, calendly: lead.calendly, customerName: lead.customerName, phoneNumber: lead.phoneNumber, projectValue: lead.projectValue } as Lead;
+  const pick = { id: lead.id, decision: lead.decision, projectOutcome: lead.projectOutcome, designerHandoffStatus: lead.designerHandoffStatus, designerContactedAt: lead.designerContactedAt, consultationStatus: lead.consultationStatus, consultationAt: lead.consultationAt, consultationSource: lead.consultationSource, outcomeRecordedBy: lead.outcomeRecordedBy, bookingUrl: (lead.bookingUrl || lead.decision === "QUALIFIED") ? bookingUrl(lead) : lead.bookingUrl, calendly: lead.calendly, customerName: lead.customerName, phoneNumber: lead.phoneNumber, projectValue: lead.projectValue } as Lead;
   return (
     <div className="page">
       <div className="page-head">
