@@ -40,7 +40,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
             </Link>
             <Nav counts={counts} />
             <div className="rail-foot">
-              <Link href="/simulate" className="ring-btn"><Phone size={15} /> Test call</Link>
+              <Link href="/simulate" className="ring-btn"><Phone size={15} /> Talk to agent</Link>
               {demo > 0 && <div className="demo-stamp">{demo === counts.leads ? "Demo data" : `${demo} demo enquiries`}</div>}
             </div>
           </aside>

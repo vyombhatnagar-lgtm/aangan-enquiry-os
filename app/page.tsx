@@ -21,7 +21,7 @@ export default async function Overview() {
         </div>
         <div className="row">
           <Link href="/leads" className="btn">All enquiries</Link>
-          <Link href="/simulate" className="btn terra">Test call</Link>
+          <Link href="/simulate" className="btn terra">Talk to agent</Link>
         </div>
       </div>
 

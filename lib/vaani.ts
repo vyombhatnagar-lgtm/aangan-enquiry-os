@@ -132,7 +132,7 @@ export function vaaniProse() { return proseOf(getKB().services.markdown); }
 export const VAANI_AGENT_ID = process.env.VAANI_AGENT_ID ?? "8f191a5b-6fd8-4256-9337-12b891ef8600";
 export function outboundConfigured() { return !!process.env.VAANI_API_KEY; }
 
-export interface OutboundRecord { callId: string; phone: string; name: string; at: string; leadId?: string; status: "ringing" | "done" | "failed"; error?: string }
+export interface OutboundRecord { callId: string; phone: string; name: string; at: string; medium?: "phone" | "web"; leadId?: string; status: "ringing" | "done" | "failed"; error?: string }
 
 /** Normalise an Indian mobile number to +91XXXXXXXXXX, or null if it isn't one. */
 export function indianMobile(raw: string): string | null {
@@ -149,4 +149,16 @@ export async function triggerOutbound(o: { phone: string; name: string; skipDnd:
   const j = (await res.json().catch(() => ({}))) as { success?: boolean; output?: { call_id?: string }; error?: unknown; detail?: unknown; message?: string };
   if (!res.ok || !j.success || !j.output?.call_id) throw new Error(typeof j.error === "string" ? j.error : j.message ?? `Vaani returned ${res.status}`);
   return { callId: j.output.call_id };
+}
+
+/** In-browser conversation with the real Vaani agent (WebRTC). Returns a short-lived token for the browser to join. */
+export async function triggerWeb(): Promise<{ token: string; roomName: string; url: string; captionsUrl?: string }> {
+  const res = await fetch("https://api.vaanivoice.ai/api/trigger-call/", {
+    method: "POST",
+    headers: { "X-API-Key": process.env.VAANI_API_KEY!, "Content-Type": "application/json" },
+    body: JSON.stringify({ agent_id: VAANI_AGENT_ID, medium: "webrtc", metadata: { source: "dashboard" }, primary_language: "en", secondary_language: "hi", voice_gender: "female", welcome_message: VAANI_GREETING }),
+  });
+  const j = (await res.json().catch(() => ({}))) as { token?: string; room_name?: string; connection_url?: string; live_captions_url?: string; error?: unknown; detail?: unknown; message?: string };
+  if (!res.ok || !j.token || !j.room_name || !j.connection_url) throw new Error(typeof j.error === "string" ? j.error : j.message ?? `Vaani returned ${res.status}`);
+  return { token: j.token, roomName: j.room_name, url: j.connection_url, captionsUrl: j.live_captions_url };
 }

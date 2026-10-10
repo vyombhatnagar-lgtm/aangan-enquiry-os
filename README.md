@@ -28,7 +28,7 @@ The system is judged by **enquiry → project conversion and revenue**, not by h
 | `/calls` | Every call and its transcript |
 | `/analytics` | Performance: before vs now, ROI, baseline editor, remove demo data |
 | `/costs` | Cost breakdown and per-call costs |
-| `/simulate` | Test call: sample callers, or play the caller yourself (saved as demo) |
+| `/simulate` | Talk to the agent: live conversation with the real Vaani agent in the browser, or have it ring your phone |
 
 The agent prompt, rules and architecture are deliberately not shown in the web UI. Use `npm run vaani:setup` to print the Vaani configuration.
 
@@ -108,9 +108,9 @@ This prototype has no Indian phone number of its own. To take real calls, a prov
 
 Pune callers will mix Hindi, Marathi and English. Choose STT/TTS that handles code-switching before going live.
 
-## Call my phone (test calls without a number)
+## Talking to the agent (no phone number needed)
 
-Test call → **Call my phone** makes the Vaani agent ring your mobile (Vaani's own default number — no number purchase needed). Talk as the customer; when you hang up, Vaani posts the transcript to the webhook and the enquiry appears with its decision. Test calls are saved as demo enquiries.
+**Talk to the agent** opens a live in-browser (WebRTC) conversation with the real Vaani agent; **Or get a call on your phone** makes it ring your mobile (Vaani's own default number — no number purchase needed). Talk as the customer; when you hang up, Vaani posts the transcript to the webhook and the enquiry appears with its decision. These are real enquiries: once any exist, all numbers and insights are computed from them only. No calls are simulated by the app; a small demo set (12 enquiries) is kept until real calls arrive.
 
 Needs `VAANI_API_KEY` (Vaani → Developers → API Keys) in Vercel. Optional: `VAANI_AGENT_ID` (defaults to the Aangan agent), `OUTBOUND_DAILY_LIMIT` (default 20).
 

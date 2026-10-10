@@ -326,8 +326,8 @@ details.collapse summary { cursor: pointer; list-style: none; } details.collapse
 @media (prefers-reduced-motion: reduce) { * { animation: none !important; transition: none !important; } }
 
 /* call my phone */
-.callme { margin-bottom: 20px; border-color: var(--accent); }
-.callme-grid { display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr) minmax(0, 1fr); gap: 24px; align-items: start; }
+.callme { margin-bottom: 20px; }
+.callme-grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 24px; align-items: start; }
 .callme-form { display: flex; flex-direction: column; gap: 10px; max-width: 380px; }
 .callme-form label > span { display: block; font-size: 12px; color: var(--muted); margin-bottom: 4px; }
 .callme-form input:not([type="checkbox"]) { width: 100%; }
@@ -336,3 +336,12 @@ details.collapse summary { cursor: pointer; list-style: none; } details.collapse
 .live-dot { width: 9px; height: 9px; border-radius: 50%; background: var(--green); animation: pulse 1.2s infinite; display: inline-block; }
 @keyframes pulse { 50% { opacity: .3; } }
 @media (max-width: 960px) { .callme-grid { grid-template-columns: 1fr; } }
+
+/* talk to the agent */
+.talk { margin-bottom: 20px; border-color: var(--accent); }
+.talk-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; flex-wrap: wrap; }
+.talk-head p { max-width: 70ch; }
+.talk-live { display: flex; align-items: center; gap: 16px; margin-top: 18px; padding: 16px; background: var(--sunk); border-radius: 10px; }
+.talk-orb { width: 64px; height: 64px; border-radius: 50%; display: grid; place-items: center; background: var(--accent-soft); color: var(--accent); flex: none; transition: transform .2s; }
+.talk-orb.speaking { background: var(--accent); color: #fff; transform: scale(1.08); box-shadow: 0 0 0 8px var(--accent-soft); }
+.talk-result { margin-top: 14px; padding: 14px; background: var(--sunk); border-radius: 10px; }

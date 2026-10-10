@@ -1,5 +1,7 @@
 import type { PoolClient } from "pg";
 import { SEED } from "./personas";
+
+const DEMO_KEEP = new Set(["s01", "s02", "s05", "s07", "s12", "s16", "s18", "s19", "s24", "s29", "s33", "s37"]);
 import { runScripted } from "../engine/simulate";
 import { completeCall, newId } from "../pipeline";
 import { applyAction } from "../actions";
@@ -35,7 +37,8 @@ export const DEMO_BASELINE = {
 
 export async function seedDemo(c: PoolClient, opts: { keepBaseline?: boolean } = {}) {
   let seq = 0;
-  for (const s of SEED) {
+  // a small, varied demo set — real calls take over the numbers as soon as they arrive
+  for (const s of SEED.filter((x) => DEMO_KEEP.has(x.p.key))) {
     const at = istToDate(s.at);
     if (s.failed) {
       const id = newId("AGN", at);

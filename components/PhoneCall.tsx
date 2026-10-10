@@ -3,14 +3,12 @@ import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { Phone, Pill } from "./ui";
 
-type Scenario = { key: string; title: string; blurb: string };
 type Status = { status: "ringing" | "done" | "failed"; leadId?: string; decision?: string; name?: string; summary?: string; error?: string };
 
-export function PhoneCall({ ready, scenarios }: { ready: boolean; scenarios: Scenario[] }) {
+export function PhoneCall({ ready }: { ready: boolean }) {
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
   const [skipDnd, setSkipDnd] = useState(true);
-  const [role, setRole] = useState(scenarios[0]?.key ?? "");
   const [callId, setCallId] = useState<string | null>(null);
   const [st, setSt] = useState<Status | null>(null);
   const [err, setErr] = useState<string | null>(null);
@@ -48,17 +46,16 @@ export function PhoneCall({ ready, scenarios }: { ready: boolean; scenarios: Sce
     setCallId(j.callId);
   };
 
-  const sc = scenarios.find((s) => s.key === role);
   const mm = `${Math.floor(elapsed / 60)}:${String(elapsed % 60).padStart(2, "0")}`;
 
   return (
     <section className="card card-pad callme">
       <div className="callme-grid">
         <div>
-          <h2 style={{ margin: 0 }}>Call my phone</h2>
-          <p className="small muted" style={{ margin: "4px 0 14px" }}>Aangan&apos;s line rings your mobile. You play the customer; when you hang up, the enquiry appears here with its decision.</p>
+          <h3 style={{ margin: 0 }}>Or get a call on your phone</h3>
+          <p className="small muted" style={{ margin: "4px 0 14px" }}>Prefer a real phone call? The agent rings your mobile; when you hang up, the enquiry appears here.</p>
           {!ready ? (
-            <div className="callout">Phone calling isn&apos;t connected yet. Add <b>VAANI_API_KEY</b> in Vercel → Settings → Environment Variables, then redeploy.</div>
+            <div className="callout">Available once the agent is connected (same key as above).</div>
           ) : (
             <form className="callme-form" onSubmit={(e) => { e.preventDefault(); call(); }}>
               <label><span>Your name</span><input value={name} onChange={(e) => setName(e.target.value)} placeholder="e.g. Vyom" /></label>
@@ -68,15 +65,6 @@ export function PhoneCall({ ready, scenarios }: { ready: boolean; scenarios: Sce
               {err && <div className="callout err">{err}</div>}
             </form>
           )}
-        </div>
-
-        <div>
-          <div className="eyebrow" style={{ marginBottom: 8 }}>Play a customer (optional)</div>
-          <select value={role} onChange={(e) => setRole(e.target.value)} style={{ width: "100%" }}>
-            {scenarios.map((s) => <option key={s.key} value={s.key}>{s.title}</option>)}
-          </select>
-          {sc && <p className="small ink2" style={{ margin: "8px 0 0" }}>{sc.blurb}</p>}
-          <p className="tiny muted" style={{ marginTop: 8 }}>Or just talk naturally — ask what it costs, change your mind, ask for a final quote.</p>
         </div>
 
         <div className="callme-status">
