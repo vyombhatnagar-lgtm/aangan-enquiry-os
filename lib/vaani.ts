@@ -146,8 +146,13 @@ export async function triggerOutbound(o: { phone: string; name: string; skipDnd:
     headers: { "X-API-Key": process.env.VAANI_API_KEY!, "Content-Type": "application/json" },
     body: JSON.stringify({ agent_id: VAANI_AGENT_ID, medium: "telephony", contact_number: o.phone, name: o.name, metadata: { test_call: true }, dnd_check_skipped: o.skipDnd }),
   });
-  const j = (await res.json().catch(() => ({}))) as { success?: boolean; output?: { call_id?: string }; error?: unknown; detail?: unknown; message?: string };
-  if (!res.ok || !j.success || !j.output?.call_id) throw new Error(typeof j.error === "string" ? j.error : j.message ?? `Vaani returned ${res.status}`);
+  const raw = await res.text();
+  let j: { success?: boolean; output?: { call_id?: string }; error?: unknown; detail?: unknown; message?: string } = {};
+  try { j = JSON.parse(raw); } catch { /* not JSON */ }
+  if (!res.ok || !j.success || !j.output?.call_id) {
+    console.error("vaani trigger-call (telephony) failed", res.status, raw.slice(0, 500));
+    throw new Error(explainVaani(res.status, j, raw));
+  }
   return { callId: j.output.call_id };
 }
 
@@ -161,4 +166,11 @@ export async function triggerWeb(): Promise<{ token: string; roomName: string; u
   const j = (await res.json().catch(() => ({}))) as { token?: string; room_name?: string; connection_url?: string; live_captions_url?: string; error?: unknown; detail?: unknown; message?: string };
   if (!res.ok || !j.token || !j.room_name || !j.connection_url) throw new Error(typeof j.error === "string" ? j.error : j.message ?? `Vaani returned ${res.status}`);
   return { token: j.token, roomName: j.room_name, url: j.connection_url, captionsUrl: j.live_captions_url };
+}
+
+function explainVaani(status: number, j: { error?: unknown; detail?: unknown; message?: string }, raw: string) {
+  const detail = typeof j.detail === "string" ? j.detail : j.detail ? JSON.stringify(j.detail) : "";
+  const msg = [typeof j.error === "string" ? j.error : "", j.message ?? "", detail].filter(Boolean).join(" — ") || raw.slice(0, 200) || `HTTP ${status}`;
+  if (status === 401 || status === 403) return `${msg} (HTTP ${status}). Vaani refused the phone call for this API key — usually the account has no phone number or outbound calling isn't enabled on the plan.`;
+  return `${msg} (HTTP ${status})`;
 }
