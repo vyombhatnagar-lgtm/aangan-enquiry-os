@@ -5,7 +5,7 @@ import { Phone, Pill } from "./ui";
 
 type Status = { status: "ringing" | "done" | "failed"; leadId?: string; decision?: string; name?: string; summary?: string; error?: string };
 
-export function PhoneCall({ ready }: { ready: boolean }) {
+export function PhoneCall({ ready, hoursOk = true }: { ready: boolean; hoursOk?: boolean }) {
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
   const [skipDnd, setSkipDnd] = useState(true);
@@ -54,6 +54,7 @@ export function PhoneCall({ ready }: { ready: boolean }) {
         <div>
           <h3 style={{ margin: 0 }}>Or get a call on your phone</h3>
           <p className="small muted" style={{ margin: "4px 0 14px" }}>Prefer a real phone call? The agent rings your mobile; when you hang up, the enquiry appears here.</p>
+          {ready && !hoursOk && <div className="callout" style={{ marginBottom: 12 }}>Phone calls work between <b>8 AM and 8 PM IST</b> (a TRAI rule for automated calls). Outside those hours, use <b>Speak in your browser</b> above.</div>}
           {!ready ? (
             <div className="callout">Available once the agent is connected (same key as above).</div>
           ) : (

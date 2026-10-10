@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { getLead, getMeta, ready, setMeta } from "@/lib/db";
 import { plain } from "@/lib/format";
-import { indianMobile, outboundConfigured, triggerOutbound, type OutboundRecord } from "@/lib/vaani";
+import { inCallingHours, indianMobile, outboundConfigured, triggerOutbound, type OutboundRecord } from "@/lib/vaani";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 30;
@@ -11,6 +11,7 @@ const DAILY_LIMIT = Number(process.env.OUTBOUND_DAILY_LIMIT ?? 20);
 /** POST {phone, name, skipDnd} → the agent calls that phone. The finished call arrives through the Vaani webhook as a test enquiry. */
 export async function POST(req: Request) {
   if (!outboundConfigured()) return NextResponse.json({ error: "Phone calling isn't connected yet." }, { status: 503 });
+  if (!inCallingHours()) return NextResponse.json({ error: "Phone calls can only be placed between 8 AM and 8 PM IST (TRAI rule). Use “Speak in your browser” now, or try the phone again after 8 AM." }, { status: 409 });
   const b = (await req.json().catch(() => ({}))) as { phone?: string; name?: string; skipDnd?: boolean };
   const phone = indianMobile(b.phone ?? "");
   if (!phone) return NextResponse.json({ error: "Enter a 10-digit Indian mobile number." }, { status: 400 });
@@ -27,7 +28,7 @@ export async function POST(req: Request) {
     await setMeta(`outbound-count:${day}`, used + 1);
     return NextResponse.json({ callId });
   } catch (e) {
-    return NextResponse.json({ error: `Couldn't start the call: ${(e as Error).message}` }, { status: 502 });
+    return NextResponse.json({ error: (e as Error).message }, { status: 502 });
   }
 }
 

@@ -1,6 +1,6 @@
 import { PhoneCall } from "@/components/PhoneCall";
 import { TalkToAgent } from "@/components/TalkToAgent";
-import { outboundConfigured } from "@/lib/vaani";
+import { inCallingHours, outboundConfigured } from "@/lib/vaani";
 
 export const dynamic = "force-dynamic";
 
@@ -15,7 +15,7 @@ export default function TalkPage() {
         </div>
       </div>
       <TalkToAgent ready={ready} />
-      <PhoneCall ready={ready} />
+      <PhoneCall ready={ready} hoursOk={inCallingHours()} />
     </div>
   );
 }

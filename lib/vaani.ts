@@ -135,6 +135,12 @@ export function outboundConfigured() { return !!process.env.VAANI_API_KEY; }
 export interface OutboundRecord { callId: string; phone: string; name: string; at: string; medium?: "phone" | "web"; leadId?: string; status: "ringing" | "done" | "failed"; error?: string }
 
 /** Normalise an Indian mobile number to +91XXXXXXXXXX, or null if it isn't one. */
+/** TRAI: outbound calls only 08:00–20:00 IST. */
+export function inCallingHours(d = new Date()) {
+  const h = Number(new Intl.DateTimeFormat("en-GB", { timeZone: "Asia/Kolkata", hour: "2-digit", hour12: false }).format(d));
+  return h >= 8 && h < 20;
+}
+
 export function indianMobile(raw: string): string | null {
   const d = raw.replace(/[^\d]/g, "").replace(/^(91|0)(?=\d{10}$)/, "");
   return /^[6-9]\d{9}$/.test(d) ? `+91${d}` : null;
@@ -171,6 +177,7 @@ export async function triggerWeb(): Promise<{ token: string; roomName: string; u
 function explainVaani(status: number, j: { error?: unknown; detail?: unknown; message?: string }, raw: string) {
   const detail = typeof j.detail === "string" ? j.detail : j.detail ? JSON.stringify(j.detail) : "";
   const msg = [typeof j.error === "string" ? j.error : "", j.message ?? "", detail].filter(Boolean).join(" — ") || raw.slice(0, 200) || `HTTP ${status}`;
-  if (status === 401 || status === 403) return `${msg} (HTTP ${status}). Vaani refused the phone call for this API key — usually the account has no phone number or outbound calling isn't enabled on the plan.`;
+  if (/08:00|20:00|TRAI/i.test(msg)) return "Phone calls can only be placed between 8 AM and 8 PM IST (TRAI rule). Use “Speak in your browser” now, or try the phone again after 8 AM.";
+  if (status === 401 || status === 403) return `${msg} (HTTP ${status})`;
   return `${msg} (HTTP ${status})`;
 }
