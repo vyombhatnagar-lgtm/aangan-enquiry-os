@@ -45,6 +45,9 @@ export function TalkToAgent({ ready }: { ready: boolean }) {
   const start = async () => {
     setErr(null); setLines([]); setRes(null); setSecs(0); setPhase("connecting");
     try {
+      // ask for the mic first, so a blocked mic never opens a silent call
+      try { const pre = await navigator.mediaDevices.getUserMedia({ audio: true }); pre.getTracks().forEach((t) => t.stop()); }
+      catch { throw new Error("Microphone access was blocked. Allow the microphone for this site (Safari: Settings for This Website → Microphone → Allow) and try again."); }
       const r = await fetch("/api/calls/web", { method: "POST" });
       const j = await r.json();
       if (!r.ok) throw new Error(j.error ?? "Couldn't connect");
@@ -56,7 +59,8 @@ export function TalkToAgent({ ready }: { ready: boolean }) {
       });
       rm.on(RoomEvent.ActiveSpeakersChanged, (sp) => setAgentTalking(sp.some((p) => p.identity !== rm.localParticipant.identity)));
       rm.on(RoomEvent.Disconnected, () => { setPhase((p) => (p === "live" ? "processing" : p)); });
-      await rm.connect(j.url, j.token);
+      await Promise.race([rm.connect(j.url, j.token), new Promise((_, rej) => setTimeout(() => rej(new Error("Couldn't reach the agent — check your connection and try again.")), 15000))]);
+      await rm.startAudio().catch(() => {}); // Safari needs this inside the click
       await rm.localParticipant.setMicrophoneEnabled(true);
       setPhase("live");
       if (j.captionsUrl) listenCaptions(j.captionsUrl);

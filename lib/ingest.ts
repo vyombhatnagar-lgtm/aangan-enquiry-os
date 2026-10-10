@@ -4,6 +4,7 @@ import { unapprovedAmounts } from "./engine/pricing";
 import { parseArea, parseBhk, parseBudget, parseLocation, parseTimeline, scopeLabel, matchServices } from "./engine/extract";
 import { completeCall, newId, type TimedEvent } from "./pipeline";
 import { isAfterHours } from "./format";
+import { normaliseIndic } from "./engine/hindi";
 import type { Slot, Turn } from "./types";
 
 /**
@@ -29,7 +30,7 @@ export async function ingestTranscript(args: {
     if (t.speaker === "caller") {
       lastCaller = t.text;
       state.lastAsked = SLOT_HINTS.find(([re]) => re.test(lastAgent))?.[1];
-      const { changed, correction } = extractStep(state, t.text, at);
+      const { changed, correction } = extractStep(state, normaliseIndic(t.text), at);
       if (Object.keys(changed).length) events.push({ type: "EXTRACTED", message: Object.keys(changed).join(","), offset: t.at });
       if (correction) events.push({ type: "CUSTOMER_CORRECTION", severity: "warn", message: `Caller corrected ${correction.slot}: "${correction.from}" → "${correction.to}"`, offset: t.at, data: correction });
     } else {
@@ -43,7 +44,7 @@ export async function ingestTranscript(args: {
         events.push({ type: "PRICING_SHOWN", message: "Indicative pricing discussed (voice platform)", offset: t.at });
         if (!/varies|depend|confirm/i.test(t.text)) events.push({ type: "PRICING_GUARDRAIL_BREACH", severity: "error", message: "Price given without the 'varies by site' caveat", offset: t.at });
       }
-      if (/\b(final (quote|price)|exact (price|cost)|guarantee)/i.test(lastCaller)) events.push({ type: "PRICING_ESCALATION", severity: "warn", message: "Final/exact price discussed — design team must quote", offset: t.at });
+      if (/\b(final (quote|price)|exact (price|cost)|guarantee)/i.test(normaliseIndic(lastCaller))) events.push({ type: "PRICING_ESCALATION", severity: "warn", message: "Final/exact price discussed — design team must quote", offset: t.at });
     }
   }
   if (args.entities) fillFromEntities(state.cs, args.entities, at, events);
