@@ -16,7 +16,7 @@ export const DEMO_EVENT_URL = "https://calendly.com/aangan-studio-demo/free-cons
 
 export function calendlyEventUrl() { return process.env.CALENDLY_EVENT_URL || DEMO_EVENT_URL; }
 export function calendlyConfigured() { return !!process.env.CALENDLY_EVENT_URL; }
-export function calendlyWebhookConfigured() { return !!process.env.CALENDLY_WEBHOOK_SIGNING_KEY; }
+export function calendlyWebhookConfigured() { return !!process.env.CALENDLY_WEBHOOK_SIGNING_KEY || !!process.env.CALENDLY_TOKEN; }
 
 export function bookingUrl(l: Pick<Lead, "id" | "customerName" | "phoneNumber">) {
   const u = new URL(calendlyEventUrl());

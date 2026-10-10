@@ -1,7 +1,10 @@
 import { auditAll, getBaseline, listCalls, listLeads, listOverrides } from "./db";
 import { computeMetrics } from "./metrics";
+import { syncCalendly } from "./calendly-sync";
 
 export async function loadAll() {
+  // pull any new Calendly bookings first (free-plan sync; throttled, never blocks the page for long)
+  await Promise.race([syncCalendly().catch(() => null), new Promise((r) => setTimeout(r, 6000))]);
   const [leads, calls, events, baseline, overrides] = await Promise.all([listLeads(), listCalls(), auditAll(["QUALIFICATION_ERROR", "CUSTOMER_CORRECTION", "PRICING_ESCALATION", "CALL_FAILED", "CALL_ABANDONED", "HANDOFF_FAILED", "INTEGRATION_FAILURE", "LOW_CONFIDENCE", "HUMAN_OVERRIDE", "HUMAN_REVIEW_CREATED", "KB_GAP", "CONSULTATION_CANCELED", "CALENDLY_UNMATCHED", "PRICING_GUARDRAIL_BREACH", "HUMAN_TRANSFER_FAILED"]), getBaseline(), listOverrides()]);
   // Once real enquiries exist, the numbers are computed from real data only — demo and test calls never mix in.
   const real = leads.some((l) => !l.isDemo);

@@ -5,7 +5,7 @@ import { NextResponse, type NextRequest } from "next/server";
  * Set DASHBOARD_PASSWORD in the hosting environment to turn it on (any username works).
  * Webhooks from the phone line, Telegram and Calendly carry their own secrets and stay open.
  */
-const OPEN = [/^\/api\/vaani\/webhook\//, /^\/api\/telegram\/webhook\//, /^\/api\/calendly\/webhook$/, /^\/api\/calls\/inbound$/, /^\/api\/health$/];
+const OPEN = [/^\/api\/vaani\/webhook\//, /^\/api\/telegram\/webhook\//, /^\/api\/calendly\/webhook$/, /^\/api\/calls\/inbound$/, /^\/api\/health$/, /^\/api\/calendly\/sync$/];
 
 export function middleware(req: NextRequest) {
   const pw = process.env.DASHBOARD_PASSWORD;

@@ -1,0 +1,1 @@
+{ "crons": [{ "path": "/api/calendly/sync", "schedule": "30 3 * * *" }] }
